@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Inicio de Sesión</title>
+</head>
+
+<body>
+
+    <h1>Iniciar Sesión</h1>
+
+    <form id="loginForm">
+
+        <div>
+            <label>Email:</label>
+            <input type="email" id="email" required>
+        </div>
+
+        <br>
+
+        <div>
+            <label>Contraseña:</label>
+            <input type="password" id="password" required>
+        </div>
+
+        <br>
+
+        <button type="submit">Ingresar</button>
+
+    </form>
+
+    <p id="mensaje"></p>
+
+    <script>
+
+        document.getElementById("loginForm").addEventListener("submit", async function (event) {
+
+            event.preventDefault();
+
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+            try {
+
+                const respuesta = await fetch("/login", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+
+                });
+
+                if (!respuesta.ok) {
+
+                    document.getElementById("mensaje").textContent =
+                        "Usuario o contraseña incorrectos";
+
+                    return;
+                }
+
+                const usuario = await respuesta.json();
+
+                // Guardamos los datos del usuario
+                localStorage.setItem("usuario", JSON.stringify(usuario));
+
+                // Redireccionamos según el rol
+                if (usuario.rol === "ADMINISTRADOR") {
+
+                    window.location.href = "/panel-admin.html";
+
+                } else if (usuario.rol === "CAJERO" || usuario.rol === "BARISTA") {
+
+                    window.location.href = "/panel-cajero.html";
+
+                } else {
+
+                    document.getElementById("mensaje").textContent =
+                        "El usuario no tiene un rol válido.";
+
+                }
+
+            } catch (error) {
+
+                console.error(error);
+
+                document.getElementById("mensaje").textContent =
+                    "Error al conectar con el servidor.";
+
+            }
+
+        });
+
+    </script>
+
+</body>
+
+</html>

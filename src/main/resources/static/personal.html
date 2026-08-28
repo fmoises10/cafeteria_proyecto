@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Personal</title>
+</head>
+
+<body>
+
+    ```
+    <h1>Gestión de Personal</h1>
+
+    <button onclick="cargarUsuarios()">Actualizar lista</button>
+
+    <br><br>
+
+    <table border="1">
+
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+
+        <tbody id="tablaUsuarios">
+        </tbody>
+
+    </table>
+
+    <br>
+
+    <a href="/panel-admin.html">Volver al panel</a>
+
+    <script>
+
+        // ==========================================
+        // LISTAR USUARIOS
+        // ==========================================
+
+        async function cargarUsuarios() {
+
+            try {
+
+                const respuesta = await fetch("/usuarios");
+
+                if (!respuesta.ok) {
+                    throw new Error("Error al obtener los usuarios");
+                }
+
+                const usuarios = await respuesta.json();
+
+                const tabla = document.getElementById("tablaUsuarios");
+
+                tabla.innerHTML = "";
+
+                usuarios.forEach(usuario => {
+
+                    const fila = document.createElement("tr");
+
+                    fila.innerHTML = `
+                    <td>${usuario.id}</td>
+                    <td>${usuario.nombre}</td>
+                    <td>${usuario.email}</td>
+                    <td>${usuario.rol}</td>
+                    <td>${usuario.activo ? "Activo" : "Inactivo"}</td>
+
+                    <td>
+                        <button onclick="editarUsuario(${usuario.id})">
+                            Editar
+                        </button>
+                    </td>
+                `;
+
+                    tabla.appendChild(fila);
+
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("No se pudieron cargar los usuarios.");
+
+            }
+        }
+
+
+        // ==========================================
+        // EDITAR USUARIO
+        // ==========================================
+
+        async function editarUsuario(id) {
+
+            const nombre = prompt("Ingrese el nuevo nombre:");
+
+            if (!nombre) {
+                return;
+            }
+
+            const email = prompt("Ingrese el nuevo email:");
+
+            if (!email) {
+                return;
+            }
+
+            const rol = prompt(
+                "Ingrese el nuevo rol:\n\nADMINISTRADOR\nCAJERO"
+            );
+
+            if (!rol) {
+                return;
+            }
+
+            try {
+
+                const respuesta = await fetch(`/usuarios/${id}`, {
+
+                    method: "PUT",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        nombre: nombre,
+                        email: email,
+                        rol: rol
+
+                    })
+
+                });
+
+                if (respuesta.ok) {
+
+                    alert("Usuario actualizado correctamente.");
+
+                    cargarUsuarios();
+
+                } else {
+
+                    alert("Error al actualizar el usuario.");
+
+                }
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error al conectar con el servidor.");
+
+            }
+
+        }
+
+
+        // ==========================================
+        // CARGAR USUARIOS AL ABRIR LA PÁGINA
+        // ==========================================
+
+        cargarUsuarios();
+
+    </script>
+    ```
+
+</body>
+
+</html>

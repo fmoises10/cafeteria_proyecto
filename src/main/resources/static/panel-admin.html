@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Panel Administrador</title>
+</head>
+
+<body>
+
+    <h1>Panel de Administrador</h1>
+
+    <p id="bienvenida"></p>
+
+    <hr>
+
+    <h2>Módulos</h2>
+
+    <button onclick="irPersonal()">Personal</button>
+
+    <button>Inventario</button>
+    <button>Ventas</button>
+    <button>Reportes</button>
+
+    <script>
+        function irPersonal() {
+            window.location.href = "/personal.html";
+        }
+    </script>
+
+    <br><br>
+
+    <button onclick="cerrarSesion()">Cerrar sesión</button>
+
+    <script>
+
+        const usuario = JSON.parse(localStorage.getItem("usuario"));
+
+        if (!usuario) {
+
+            window.location.href = "/index.html";
+
+        } else {
+
+            document.getElementById("bienvenida").textContent =
+                "Bienvenido, " + usuario.nombre;
+
+        }
+
+        function cerrarSesion() {
+
+            localStorage.removeItem("usuario");
+
+            window.location.href = "/index.html";
+
+        }
+
+    </script>
+
+</body>
+
+</html>

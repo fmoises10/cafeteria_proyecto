@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Panel Cajero</title>
+</head>
+
+<body>
+
+    <h1>Panel de Cajero / Barista</h1>
+
+    <p id="bienvenida"></p>
+
+    <hr>
+
+    <h2>Módulos</h2>
+
+    <button>Nuevo Pedido</button>
+    <button>Ventas</button>
+    <button>Escanear Insumo</button>
+
+    <br><br>
+
+    <button onclick="cerrarSesion()">Cerrar sesión</button>
+
+    <script>
+
+        const usuario = JSON.parse(localStorage.getItem("usuario"));
+
+        if (!usuario) {
+
+            window.location.href = "/index.html";
+
+        } else {
+
+            document.getElementById("bienvenida").textContent =
+                "Bienvenido, " + usuario.nombre;
+
+        }
+
+        function cerrarSesion() {
+
+            localStorage.removeItem("usuario");
+
+            window.location.href = "/index.html";
+
+        }
+
+    </script>
+
+</body>
+
+</html>
