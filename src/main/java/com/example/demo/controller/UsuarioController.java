@@ -19,6 +19,7 @@ public class UsuarioController {
     // CREAR
     @PostMapping
     public Usuario guardar(@RequestBody Usuario usuario) {
+        usuario.setActivo(true);
         return usuarioRepository.save(usuario);
     }
 
@@ -48,14 +49,38 @@ public class UsuarioController {
 
         usuario.setNombre(datos.getNombre());
         usuario.setEmail(datos.getEmail());
-        usuario.setPassword(datos.getPassword());
+        usuario.setRol(datos.getRol());
 
         return usuarioRepository.save(usuario);
     }
 
-    // ELIMINAR
-    @DeleteMapping("/{id}")
-    public void eliminar(@PathVariable Long id) {
-        usuarioRepository.deleteById(id);
+    // DESACTIVAR
+    @PutMapping("/{id}/desactivar")
+    public Usuario desactivar(@PathVariable Long id) {
+
+        Usuario usuario = usuarioRepository.findById(id).orElse(null);
+
+        if (usuario == null) {
+            return null;
+        }
+
+        usuario.setActivo(false);
+
+        return usuarioRepository.save(usuario);
+    }
+
+    // REACTIVAR
+    @PutMapping("/{id}/activar")
+    public Usuario activar(@PathVariable Long id) {
+
+        Usuario usuario = usuarioRepository.findById(id).orElse(null);
+
+        if (usuario == null) {
+            return null;
+        }
+
+        usuario.setActivo(true);
+
+        return usuarioRepository.save(usuario);
     }
 }

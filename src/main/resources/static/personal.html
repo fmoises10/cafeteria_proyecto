@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="es">
 
 <head>
@@ -9,8 +8,43 @@
 
 <body>
 
-    ```
     <h1>Gestión de Personal</h1>
+
+    <h2>Registrar nuevo personal</h2>
+
+    <form id="formularioPersonal">
+
+        <label>Nombre:</label>
+        <input type="text" id="nombre" required>
+
+        <br><br>
+
+        <label>Email:</label>
+        <input type="email" id="email" required>
+
+        <br><br>
+
+        <label>Contraseña:</label>
+        <input type="password" id="password" required>
+
+        <br><br>
+
+        <label>Rol:</label>
+
+        <select id="rol" required>
+            <option value="CAJERO">Cajero</option>
+            <option value="ADMINISTRADOR">Administrador</option>
+        </select>
+
+        <br><br>
+
+        <button type="submit">Registrar personal</button>
+
+    </form>
+
+    <hr>
+
+    <h2>Personal registrado</h2>
 
     <button onclick="cargarUsuarios()">Actualizar lista</button>
 
@@ -38,11 +72,65 @@
 
     <a href="/panel-admin.html">Volver al panel</a>
 
+
     <script>
 
-        // ==========================================
+        // REGISTRAR PERSONAL
+
+        document.getElementById("formularioPersonal").addEventListener("submit", async function (event) {
+
+            event.preventDefault();
+
+            const nombre = document.getElementById("nombre").value;
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const rol = document.getElementById("rol").value;
+
+            try {
+
+                const respuesta = await fetch("/usuarios", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        nombre: nombre,
+                        email: email,
+                        password: password,
+                        rol: rol
+                    })
+
+                });
+
+                if (respuesta.ok) {
+
+                    alert("Personal registrado correctamente.");
+
+                    document.getElementById("formularioPersonal").reset();
+
+                    cargarUsuarios();
+
+                } else {
+
+                    alert("Error al registrar personal.");
+
+                }
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error al conectar con el servidor.");
+
+            }
+
+        });
+
+
         // LISTAR USUARIOS
-        // ==========================================
 
         async function cargarUsuarios() {
 
@@ -51,7 +139,7 @@
                 const respuesta = await fetch("/usuarios");
 
                 if (!respuesta.ok) {
-                    throw new Error("Error al obtener los usuarios");
+                    throw new Error("Error al obtener usuarios");
                 }
 
                 const usuarios = await respuesta.json();
@@ -64,19 +152,49 @@
 
                     const fila = document.createElement("tr");
 
-                    fila.innerHTML = `
-                    <td>${usuario.id}</td>
-                    <td>${usuario.nombre}</td>
-                    <td>${usuario.email}</td>
-                    <td>${usuario.rol}</td>
-                    <td>${usuario.activo ? "Activo" : "Inactivo"}</td>
+                    let botonEstado = "";
 
-                    <td>
-                        <button onclick="editarUsuario(${usuario.id})">
-                            Editar
-                        </button>
-                    </td>
-                `;
+                    if (usuario.activo) {
+
+                        botonEstado = `
+                            <button onclick="desactivarUsuario(${usuario.id})">
+                                Desactivar
+                            </button>
+                        `;
+
+                    } else {
+
+                        botonEstado = `
+                            <button onclick="activarUsuario(${usuario.id})">
+                                Reactivar
+                            </button>
+                        `;
+
+                    }
+
+                    fila.innerHTML = `
+
+                        <td>${usuario.id}</td>
+
+                        <td>${usuario.nombre}</td>
+
+                        <td>${usuario.email}</td>
+
+                        <td>${usuario.rol}</td>
+
+                        <td>${usuario.activo ? "Activo" : "Inactivo"}</td>
+
+                        <td>
+
+                            <button onclick="editarUsuario(${usuario.id})">
+                                Editar
+                            </button>
+
+                            ${botonEstado}
+
+                        </td>
+
+                    `;
 
                     tabla.appendChild(fila);
 
@@ -89,12 +207,11 @@
                 alert("No se pudieron cargar los usuarios.");
 
             }
+
         }
 
 
-        // ==========================================
         // EDITAR USUARIO
-        // ==========================================
 
         async function editarUsuario(id) {
 
@@ -129,11 +246,9 @@
                     },
 
                     body: JSON.stringify({
-
                         nombre: nombre,
                         email: email,
                         rol: rol
-
                     })
 
                 });
@@ -161,14 +276,91 @@
         }
 
 
-        // ==========================================
-        // CARGAR USUARIOS AL ABRIR LA PÁGINA
-        // ==========================================
+        // DESACTIVAR
+
+        async function desactivarUsuario(id) {
+
+            if (!confirm("¿Está seguro de desactivar este usuario?")) {
+                return;
+            }
+
+            try {
+
+                const respuesta = await fetch(
+                    `/usuarios/${id}/desactivar`,
+                    {
+                        method: "PUT"
+                    }
+                );
+
+                if (respuesta.ok) {
+
+                    alert("Usuario desactivado correctamente.");
+
+                    cargarUsuarios();
+
+                } else {
+
+                    alert("Error al desactivar usuario.");
+
+                }
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error al conectar con el servidor.");
+
+            }
+
+        }
+
+
+        // REACTIVAR
+
+        async function activarUsuario(id) {
+
+            if (!confirm("¿Está seguro de reactivar este usuario?")) {
+                return;
+            }
+
+            try {
+
+                const respuesta = await fetch(
+                    `/usuarios/${id}/activar`,
+                    {
+                        method: "PUT"
+                    }
+                );
+
+                if (respuesta.ok) {
+
+                    alert("Usuario reactivado correctamente.");
+
+                    cargarUsuarios();
+
+                } else {
+
+                    alert("Error al reactivar usuario.");
+
+                }
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error al conectar con el servidor.");
+
+            }
+
+        }
+
+
+        // CARGAR AL ABRIR
 
         cargarUsuarios();
 
     </script>
-    ```
 
 </body>
 

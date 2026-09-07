@@ -18,23 +18,50 @@
 
     <button onclick="irPersonal()">Personal</button>
 
-    <button>Inventario</button>
+    <button onclick="irInventario()">Inventario</button>
+
+    <button onclick="irContenedores()">Contenedores</button>
+
     <button>Ventas</button>
+
     <button>Reportes</button>
 
+
     <script>
+
         function irPersonal() {
+
             window.location.href = "/personal.html";
+
         }
+
+
+        function irInventario() {
+
+            window.location.href = "/inventario.html";
+
+        }
+
+
+        function irContenedores() {
+
+            window.location.href = "/contenedores.html";
+
+        }
+
     </script>
+
 
     <br><br>
 
     <button onclick="cerrarSesion()">Cerrar sesión</button>
 
+
     <script>
 
-        const usuario = JSON.parse(localStorage.getItem("usuario"));
+        const usuario =
+            JSON.parse(localStorage.getItem("usuario"));
+
 
         if (!usuario) {
 
@@ -46,6 +73,7 @@
                 "Bienvenido, " + usuario.nombre;
 
         }
+
 
         function cerrarSesion() {
 
