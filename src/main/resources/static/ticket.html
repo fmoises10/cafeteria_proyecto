@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Ticket de Venta</title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f2f2;
+        }
+
+        .ticket {
+            width: 320px;
+            margin: 30px auto;
+            padding: 20px;
+            background: white;
+            border: 1px solid #ccc;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .centrado {
+            text-align: center;
+        }
+
+        .separador {
+            border-top: 1px dashed #000;
+            margin: 15px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 5px;
+            text-align: left;
+        }
+
+        .derecha {
+            text-align: right;
+        }
+
+        .total {
+            font-size: 20px;
+            font-weight: bold;
+            text-align: right;
+            margin-top: 15px;
+        }
+
+        .botones {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+
+        @media print {
+
+            body {
+                background: white;
+            }
+
+            .ticket {
+                border: none;
+                margin: 0;
+            }
+
+            .botones {
+                display: none;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="ticket">
+
+        <h1>CAFETERÍA</h1>
+
+        <p class="centrado">
+            Comprobante de venta
+        </p>
+
+        <div class="separador"></div>
+
+        <p>
+            <strong>Venta N.º:</strong>
+            <span id="numeroVenta"></span>
+        </p>
+
+        <p>
+            <strong>Fecha:</strong>
+            <span id="fecha"></span>
+        </p>
+
+        <p>
+            <strong>Método de pago:</strong>
+            <span id="metodoPago"></span>
+        </p>
+
+        <div class="separador"></div>
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>Producto</th>
+                    <th>Cant.</th>
+                    <th>Subtotal</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="listaProductos"></tbody>
+
+        </table>
+
+        <div class="separador"></div>
+
+        <p class="total">
+
+            TOTAL:
+            Bs <span id="total"></span>
+
+        </p>
+
+        <p class="centrado">
+            ¡Gracias por su compra!
+        </p>
+
+        <div class="botones">
+
+            <button onclick="window.print()">
+                🖨️ Imprimir ticket
+            </button>
+
+            <button onclick="volver()">
+                Volver
+            </button>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        async function cargarTicket() {
+
+            const parametros =
+                new URLSearchParams(
+                    window.location.search
+                );
+
+            const ventaId =
+                parametros.get("id");
+
+            if (!ventaId) {
+
+                document.body.innerHTML =
+                    "<h2>No se indicó una venta.</h2>";
+
+                return;
+            }
+
+            const respuesta =
+                await fetch(
+                    "/tickets/" + ventaId
+                );
+
+            if (!respuesta.ok) {
+
+                document.body.innerHTML =
+                    "<h2>No se pudo cargar el ticket.</h2>";
+
+                return;
+            }
+
+            const ticket =
+                await respuesta.json();
+
+            document.getElementById(
+                "numeroVenta"
+            ).textContent =
+                ticket.id;
+
+            document.getElementById(
+                "fecha"
+            ).textContent =
+                formatearFecha(ticket.fecha);
+
+            document.getElementById(
+                "metodoPago"
+            ).textContent =
+                ticket.metodoPago;
+
+            document.getElementById(
+                "total"
+            ).textContent =
+                ticket.total.toFixed(2);
+
+            const lista =
+                document.getElementById(
+                    "listaProductos"
+                );
+
+            lista.innerHTML = "";
+
+            ticket.productos.forEach(
+                producto => {
+
+                    const fila =
+                        document.createElement("tr");
+
+                    fila.innerHTML = `
+
+                        <td>
+                            ${producto.nombre}
+                        </td>
+
+                        <td>
+                            ${producto.cantidad}
+                        </td>
+
+                        <td class="derecha">
+                            Bs ${producto.subtotal.toFixed(2)}
+                        </td>
+
+                    `;
+
+                    lista.appendChild(fila);
+
+                }
+            );
+        }
+
+        function formatearFecha(fecha) {
+
+            if (!fecha) {
+                return "-";
+            }
+
+            return new Date(fecha)
+                .toLocaleString();
+
+        }
+
+        function volver() {
+
+            window.location.href =
+                "/ventas.html";
+
+        }
+
+        cargarTicket();
+
+    </script>
+
+</body>
+
+</html>

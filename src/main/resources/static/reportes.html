@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Reportes</title>
+
+</head>
+
+<body>
+
+    <h1>Reportes del Sistema</h1>
+
+    <hr>
+
+    <h2>Resumen de ventas</h2>
+
+    <p>
+        Cantidad de ventas:
+        <strong id="cantidadVentas">0</strong>
+    </p>
+
+    <p>
+        Total vendido:
+        <strong>
+            Bs <span id="totalVentas">0.00</span>
+        </strong>
+    </p>
+
+    <hr>
+
+    <h2>Ventas por método de pago</h2>
+
+    <table border="1">
+
+        <thead>
+
+            <tr>
+                <th>Método de pago</th>
+                <th>Total</th>
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            <tr>
+                <td>Efectivo</td>
+                <td>
+                    Bs <span id="efectivo">0.00</span>
+                </td>
+            </tr>
+
+            <tr>
+                <td>QR</td>
+                <td>
+                    Bs <span id="qr">0.00</span>
+                </td>
+            </tr>
+
+            <tr>
+                <td>Tarjeta</td>
+                <td>
+                    Bs <span id="tarjeta">0.00</span>
+                </td>
+            </tr>
+
+        </tbody>
+
+    </table>
+
+    <hr>
+
+    <h2>Detalle de ventas</h2>
+
+    <table border="1">
+
+        <thead>
+
+            <tr>
+
+                <th>ID</th>
+                <th>Fecha</th>
+                <th>Total</th>
+                <th>Método de pago</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody id="listaVentas"></tbody>
+
+    </table>
+
+    <hr>
+
+    <h2>Historial de cajas</h2>
+
+    <table border="1">
+
+        <thead>
+
+            <tr>
+
+                <th>ID</th>
+                <th>Fecha apertura</th>
+                <th>Fecha cierre</th>
+                <th>Monto inicial</th>
+                <th>Efectivo esperado</th>
+                <th>Monto contado</th>
+                <th>Diferencia</th>
+                <th>Estado</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody id="listaCajas"></tbody>
+
+    </table>
+
+    <br>
+
+    <button onclick="volver()">
+        Volver al panel
+    </button>
+
+    <script>
+
+        async function cargarReporteVentas() {
+
+            const respuesta =
+                await fetch("/reportes/ventas");
+
+            const reporte =
+                await respuesta.json();
+
+            document.getElementById(
+                "cantidadVentas"
+            ).textContent =
+                reporte.cantidadVentas;
+
+            document.getElementById(
+                "totalVentas"
+            ).textContent =
+                reporte.totalVentas.toFixed(2);
+
+            document.getElementById(
+                "efectivo"
+            ).textContent =
+                reporte.efectivo.toFixed(2);
+
+            document.getElementById(
+                "qr"
+            ).textContent =
+                reporte.qr.toFixed(2);
+
+            document.getElementById(
+                "tarjeta"
+            ).textContent =
+                reporte.tarjeta.toFixed(2);
+
+            const lista =
+                document.getElementById(
+                    "listaVentas"
+                );
+
+            lista.innerHTML = "";
+
+            reporte.ventas.forEach(venta => {
+
+                const fila =
+                    document.createElement("tr");
+
+                fila.innerHTML = `
+
+                    <td>
+                        ${venta.id}
+                    </td>
+
+                    <td>
+                        ${formatearFecha(venta.fecha)}
+                    </td>
+
+                    <td>
+                        Bs ${venta.total.toFixed(2)}
+                    </td>
+
+                    <td>
+                        ${venta.metodoPago || "-"}
+                    </td>
+
+                `;
+
+                lista.appendChild(fila);
+
+            });
+        }
+
+        async function cargarReporteCajas() {
+
+            const respuesta =
+                await fetch("/reportes/cajas");
+
+            const cajas =
+                await respuesta.json();
+
+            const lista =
+                document.getElementById(
+                    "listaCajas"
+                );
+
+            lista.innerHTML = "";
+
+            cajas.forEach(caja => {
+
+                const fila =
+                    document.createElement("tr");
+
+                fila.innerHTML = `
+
+                    <td>
+                        ${caja.id}
+                    </td>
+
+                    <td>
+                        ${formatearFecha(
+                            caja.fechaApertura
+                        )}
+                    </td>
+
+                    <td>
+                        ${formatearFecha(
+                            caja.fechaCierre
+                        )}
+                    </td>
+
+                    <td>
+                        Bs ${caja.montoInicial.toFixed(2)}
+                    </td>
+
+                    <td>
+                        Bs ${caja.efectivoEsperado.toFixed(2)}
+                    </td>
+
+                    <td>
+                        Bs ${caja.montoFinal.toFixed(2)}
+                    </td>
+
+                    <td>
+                        Bs ${caja.diferencia.toFixed(2)}
+                    </td>
+
+                    <td>
+                        ${caja.abierta
+                            ? "ABIERTA"
+                            : "CERRADA"}
+                    </td>
+
+                `;
+
+                lista.appendChild(fila);
+
+            });
+        }
+
+        function formatearFecha(fecha) {
+
+            if (!fecha) {
+                return "-";
+            }
+
+            return new Date(fecha)
+                .toLocaleString();
+        }
+
+        function volver() {
+
+            window.location.href =
+                "/panel-admin.html";
+        }
+
+        cargarReporteVentas();
+
+        cargarReporteCajas();
+
+    </script>
+
+</body>
+
+</html>

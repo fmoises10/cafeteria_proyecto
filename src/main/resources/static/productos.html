@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Productos</title>
+</head>
+
+<body>
+
+    <h1>Productos</h1>
+
+    <h2>Registrar producto</h2>
+
+    <form id="productoForm">
+
+        <div>
+            <label>Nombre:</label>
+            <input type="text" id="nombre" required>
+        </div>
+
+        <br>
+
+        <div>
+            <label>Precio:</label>
+            <input type="number" id="precio" step="0.01" min="0" required>
+        </div>
+
+        <br>
+
+        <button type="submit">Registrar producto</button>
+
+    </form>
+
+    <hr>
+
+    <h2>Productos registrados</h2>
+
+    <table border="1">
+
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Precio</th>
+            </tr>
+        </thead>
+
+        <tbody id="listaProductos"></tbody>
+
+    </table>
+
+    <br>
+
+    <button onclick="volver()">Volver</button>
+
+    <script>
+
+        async function cargarProductos() {
+
+            const respuesta = await fetch("/productos");
+
+            const productos = await respuesta.json();
+
+            const lista = document.getElementById("listaProductos");
+
+            lista.innerHTML = "";
+
+            productos.forEach(producto => {
+
+                const fila = document.createElement("tr");
+
+                fila.innerHTML = `
+                    <td>${producto.id}</td>
+                    <td>${producto.nombre}</td>
+                    <td>Bs ${producto.precio.toFixed(2)}</td>
+                `;
+
+                lista.appendChild(fila);
+
+            });
+        }
+
+        document.getElementById("productoForm")
+            .addEventListener("submit", async function(event) {
+
+                event.preventDefault();
+
+                const nombre = document.getElementById("nombre").value;
+                const precio = document.getElementById("precio").value;
+
+                await fetch("/productos", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        nombre: nombre,
+                        precio: parseFloat(precio)
+                    })
+
+                });
+
+                document.getElementById("productoForm").reset();
+
+                cargarProductos();
+
+            });
+
+        function volver() {
+            window.location.href = "/panel-admin.html";
+        }
+
+        cargarProductos();
+
+    </script>
+
+</body>
+
+</html>

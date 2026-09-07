@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Ventas</title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #eee;
+        }
+
+        input,
+        select,
+        button {
+            padding: 8px;
+            margin: 5px;
+        }
+
+        #total {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        #mensaje {
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        #botonTicket {
+            display: none;
+            margin-top: 15px;
+            padding: 10px 20px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <h1>Ventas</h1>
+
+    <hr>
+
+    <h2>Registrar venta</h2>
+
+    <div>
+
+        <label>
+            Producto:
+        </label>
+
+        <select id="producto">
+
+            <option value="">
+                Seleccione un producto
+            </option>
+
+        </select>
+
+        <label>
+            Cantidad:
+        </label>
+
+        <input
+            type="number"
+            id="cantidad"
+            min="1"
+            value="1"
+        >
+
+        <button onclick="agregarProducto()">
+            Agregar
+        </button>
+
+    </div>
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Precio</th>
+                <th>Subtotal</th>
+                <th>Acción</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody id="detalleVenta">
+
+        </tbody>
+
+    </table>
+
+    <br>
+
+    <p id="total">
+        Total: Bs 0.00
+    </p>
+
+    <label>
+        Método de pago:
+    </label>
+
+    <select id="metodoPago">
+
+        <option value="EFECTIVO">
+            EFECTIVO
+        </option>
+
+        <option value="QR">
+            QR
+        </option>
+
+        <option value="TARJETA">
+            TARJETA
+        </option>
+
+    </select>
+
+    <br><br>
+
+    <button onclick="registrarVenta()">
+        Registrar venta
+    </button>
+
+    <p id="mensaje"></p>
+
+    <button
+        id="botonTicket"
+        onclick="imprimirTicket()">
+
+        🖨️ Imprimir ticket
+
+    </button>
+
+    <br><br>
+
+    <button onclick="volver()">
+        Volver al panel
+    </button>
+
+
+    <script>
+
+        let productos = [];
+
+        let carrito = [];
+
+        let ultimaVentaId = null;
+
+
+        async function cargarProductos() {
+
+            const respuesta =
+                await fetch("/productos");
+
+            productos =
+                await respuesta.json();
+
+            const select =
+                document.getElementById("producto");
+
+            productos.forEach(producto => {
+
+                const opcion =
+                    document.createElement("option");
+
+                opcion.value =
+                    producto.id;
+
+                opcion.textContent =
+                    producto.nombre +
+                    " - Bs " +
+                    producto.precio.toFixed(2);
+
+                select.appendChild(opcion);
+
+            });
+
+        }
+
+
+        function agregarProducto() {
+
+            const productoId =
+                Number(
+                    document.getElementById(
+                        "producto"
+                    ).value
+                );
+
+            const cantidad =
+                Number(
+                    document.getElementById(
+                        "cantidad"
+                    ).value
+                );
+
+            if (!productoId) {
+
+                alert(
+                    "Seleccione un producto."
+                );
+
+                return;
+            }
+
+            if (cantidad <= 0) {
+
+                alert(
+                    "La cantidad debe ser mayor que cero."
+                );
+
+                return;
+            }
+
+
+            const producto =
+                productos.find(
+                    p => p.id === productoId
+                );
+
+            if (!producto) {
+                return;
+            }
+
+
+            carrito.push({
+
+                productoId:
+                    producto.id,
+
+                nombre:
+                    producto.nombre,
+
+                cantidad:
+                    cantidad,
+
+                precio:
+                    producto.precio,
+
+                subtotal:
+                    cantidad *
+                    producto.precio
+
+            });
+
+
+            mostrarCarrito();
+
+        }
+
+
+        function mostrarCarrito() {
+
+            const tabla =
+                document.getElementById(
+                    "detalleVenta"
+                );
+
+            tabla.innerHTML = "";
+
+            let total = 0;
+
+
+            carrito.forEach(
+                (item, indice) => {
+
+                    total += item.subtotal;
+
+
+                    const fila =
+                        document.createElement("tr");
+
+
+                    fila.innerHTML = `
+
+                        <td>
+                            ${item.nombre}
+                        </td>
+
+                        <td>
+                            ${item.cantidad}
+                        </td>
+
+                        <td>
+                            Bs ${item.precio.toFixed(2)}
+                        </td>
+
+                        <td>
+                            Bs ${item.subtotal.toFixed(2)}
+                        </td>
+
+                        <td>
+
+                            <button
+                                onclick="eliminarProducto(${indice})">
+
+                                Eliminar
+
+                            </button>
+
+                        </td>
+
+                    `;
+
+
+                    tabla.appendChild(fila);
+
+                }
+            );
+
+
+            document.getElementById(
+                "total"
+            ).textContent =
+                "Total: Bs " +
+                total.toFixed(2);
+
+        }
+
+
+        function eliminarProducto(indice) {
+
+            carrito.splice(
+                indice,
+                1
+            );
+
+            mostrarCarrito();
+
+        }
+
+
+        async function registrarVenta() {
+
+            if (carrito.length === 0) {
+
+                alert(
+                    "Debe agregar al menos un producto."
+                );
+
+                return;
+            }
+
+
+            let total = 0;
+
+
+            carrito.forEach(item => {
+
+                total += item.subtotal;
+
+            });
+
+
+            const metodoPago =
+                document.getElementById(
+                    "metodoPago"
+                ).value;
+
+
+            try {
+
+                const respuestaVenta =
+                    await fetch(
+                        "/ventas",
+                        {
+
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body: JSON.stringify({
+
+                                total:
+                                    total,
+
+                                metodoPago:
+                                    metodoPago
+
+                            })
+
+                        }
+                    );
+
+
+                if (!respuestaVenta.ok) {
+
+                    document.getElementById(
+                        "mensaje"
+                    ).textContent =
+                        "No se pudo registrar la venta.";
+
+                    return;
+                }
+
+
+                const venta =
+                    await respuestaVenta.json();
+
+
+                /*
+                 * Guardamos el ID de la venta.
+                 * Lo necesitamos para crear
+                 * los detalles y para imprimir
+                 * el ticket.
+                 */
+
+                ultimaVentaId =
+                    venta.id;
+
+
+                /*
+                 * Registrar cada producto
+                 * de la venta.
+                 */
+
+                for (const item of carrito) {
+
+                    await fetch(
+                        "/detalles-venta",
+                        {
+
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body: JSON.stringify({
+
+                                ventaId:
+                                    venta.id,
+
+                                productoId:
+                                    item.productoId,
+
+                                cantidad:
+                                    item.cantidad,
+
+                                precio:
+                                    item.precio
+
+                            })
+
+                        }
+                    );
+
+                }
+
+
+                document.getElementById(
+                    "mensaje"
+                ).textContent =
+                    "Venta registrada correctamente.";
+
+
+                /*
+                 * Mostrar botón de ticket.
+                 */
+
+                document.getElementById(
+                    "botonTicket"
+                ).style.display =
+                    "inline-block";
+
+
+                /*
+                 * Vaciar carrito.
+                 */
+
+                carrito = [];
+
+                mostrarCarrito();
+
+            } catch (error) {
+
+                console.error(error);
+
+                document.getElementById(
+                    "mensaje"
+                ).textContent =
+                    "Error al conectar con el servidor.";
+
+            }
+
+        }
+
+
+        function imprimirTicket() {
+
+            if (!ultimaVentaId) {
+
+                alert(
+                    "No existe una venta para imprimir."
+                );
+
+                return;
+            }
+
+
+            window.location.href =
+                "/ticket.html?id=" +
+                ultimaVentaId;
+
+        }
+
+
+        function volver() {
+
+            window.location.href =
+                "/panel-admin.html";
+
+        }
+
+
+        cargarProductos();
+
+    </script>
+
+</body>
+
+</html>

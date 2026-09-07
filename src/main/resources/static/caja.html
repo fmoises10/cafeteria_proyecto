@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Caja</title>
+</head>
+
+<body>
+
+    <h1>Control de Caja</h1>
+
+    <hr>
+
+    <h2>Estado de caja</h2>
+
+    <p id="estado"></p>
+
+    <div id="apertura">
+
+        <h2>Abrir caja</h2>
+
+        <label>Monto inicial:</label>
+
+        <input
+            type="number"
+            id="montoInicial"
+            step="0.01"
+            min="0"
+        >
+
+        <br><br>
+
+        <button onclick="abrirCaja()">
+            Abrir caja
+        </button>
+
+    </div>
+
+    <div id="cierre" style="display:none;">
+
+        <h2>Caja abierta</h2>
+
+        <p>
+            Monto inicial:
+            Bs <span id="mostrarInicial">0.00</span>
+        </p>
+
+        <p>
+            Efectivo esperado actualmente:
+            <strong>
+                Bs <span id="mostrarEsperado">0.00</span>
+            </strong>
+        </p>
+
+        <hr>
+
+        <h2>Cerrar caja</h2>
+
+        <label>
+            Dinero contado al cerrar:
+        </label>
+
+        <input
+            type="number"
+            id="montoFinal"
+            step="0.01"
+            min="0"
+        >
+
+        <br><br>
+
+        <button onclick="cerrarCaja()">
+            Cerrar caja
+        </button>
+
+    </div>
+
+    <hr>
+
+    <h2>Historial de cajas</h2>
+
+    <table border="1">
+
+        <thead>
+
+            <tr>
+                <th>ID</th>
+                <th>Apertura</th>
+                <th>Monto inicial</th>
+                <th>Efectivo esperado</th>
+                <th>Monto contado</th>
+                <th>Diferencia</th>
+                <th>Estado</th>
+            </tr>
+
+        </thead>
+
+        <tbody id="historial"></tbody>
+
+    </table>
+
+    <br>
+
+    <button onclick="volver()">
+        Volver
+    </button>
+
+    <p id="mensaje"></p>
+
+    <script>
+
+        async function cargarCaja() {
+
+            const respuesta =
+                await fetch("/cajas/actual");
+
+            const caja =
+                await respuesta.json();
+
+            const estado =
+                document.getElementById("estado");
+
+            const apertura =
+                document.getElementById("apertura");
+
+            const cierre =
+                document.getElementById("cierre");
+
+            if (!caja || !caja.id) {
+
+                estado.textContent =
+                    "No hay una caja abierta.";
+
+                apertura.style.display = "block";
+
+                cierre.style.display = "none";
+
+            } else {
+
+                estado.textContent =
+                    "Caja abierta. ID: " + caja.id;
+
+                apertura.style.display = "none";
+
+                cierre.style.display = "block";
+
+                document.getElementById(
+                    "mostrarInicial"
+                ).textContent =
+                    caja.montoInicial.toFixed(2);
+
+                document.getElementById(
+                    "mostrarEsperado"
+                ).textContent =
+                    caja.efectivoEsperado.toFixed(2);
+            }
+        }
+
+        async function abrirCaja() {
+
+            const monto =
+                parseFloat(
+                    document.getElementById(
+                        "montoInicial"
+                    ).value
+                );
+
+            if (isNaN(monto) || monto < 0) {
+
+                alert(
+                    "Ingrese un monto inicial válido."
+                );
+
+                return;
+            }
+
+            const respuesta =
+                await fetch(
+                    "/cajas/abrir?montoInicial=" + monto,
+                    {
+                        method: "POST"
+                    }
+                );
+
+            const caja =
+                await respuesta.json();
+
+            if (caja && caja.id) {
+
+                document.getElementById(
+                    "mensaje"
+                ).textContent =
+                    "Caja abierta correctamente.";
+
+                document.getElementById(
+                    "montoInicial"
+                ).value = "";
+
+                cargarCaja();
+                cargarHistorial();
+
+            } else {
+
+                document.getElementById(
+                    "mensaje"
+                ).textContent =
+                    "No se pudo abrir la caja.";
+            }
+        }
+
+        async function cerrarCaja() {
+
+            const monto =
+                parseFloat(
+                    document.getElementById(
+                        "montoFinal"
+                    ).value
+                );
+
+            if (isNaN(monto) || monto < 0) {
+
+                alert(
+                    "Ingrese un monto final válido."
+                );
+
+                return;
+            }
+
+            const respuesta =
+                await fetch(
+                    "/cajas/cerrar?montoFinal=" + monto,
+                    {
+                        method: "POST"
+                    }
+                );
+
+            const caja =
+                await respuesta.json();
+
+            if (caja && caja.id) {
+
+                document.getElementById(
+                    "mensaje"
+                ).textContent =
+                    "Caja cerrada correctamente. " +
+                    "Diferencia: Bs " +
+                    caja.diferencia.toFixed(2);
+
+                document.getElementById(
+                    "montoFinal"
+                ).value = "";
+
+                cargarCaja();
+                cargarHistorial();
+
+            } else {
+
+                document.getElementById(
+                    "mensaje"
+                ).textContent =
+                    "No hay una caja abierta.";
+            }
+        }
+
+        async function cargarHistorial() {
+
+            const respuesta =
+                await fetch("/cajas");
+
+            const cajas =
+                await respuesta.json();
+
+            const tabla =
+                document.getElementById(
+                    "historial"
+                );
+
+            tabla.innerHTML = "";
+
+            cajas.forEach(caja => {
+
+                const fila =
+                    document.createElement("tr");
+
+                fila.innerHTML = `
+
+                    <td>${caja.id}</td>
+
+                    <td>
+                        ${formatearFecha(caja.fechaApertura)}
+                    </td>
+
+                    <td>
+                        Bs ${caja.montoInicial.toFixed(2)}
+                    </td>
+
+                    <td>
+                        Bs ${caja.efectivoEsperado.toFixed(2)}
+                    </td>
+
+                    <td>
+                        Bs ${caja.montoFinal.toFixed(2)}
+                    </td>
+
+                    <td>
+                        Bs ${caja.diferencia.toFixed(2)}
+                    </td>
+
+                    <td>
+                        ${caja.abierta ? "ABIERTA" : "CERRADA"}
+                    </td>
+                `;
+
+                tabla.appendChild(fila);
+
+            });
+        }
+
+        function formatearFecha(fecha) {
+
+            if (!fecha) {
+                return "-";
+            }
+
+            return new Date(fecha).toLocaleString();
+        }
+
+        function volver() {
+
+            window.location.href =
+                "/panel-admin.html";
+        }
+
+        cargarCaja();
+        cargarHistorial();
+
+    </script>
+
+</body>
+
+</html>

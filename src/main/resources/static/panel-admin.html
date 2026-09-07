@@ -16,62 +16,107 @@
 
     <h2>Módulos</h2>
 
-    <button onclick="irPersonal()">Personal</button>
+    <button onclick="irPersonal()">
+        Personal
+    </button>
 
-    <button onclick="irInventario()">Inventario</button>
+    <button onclick="irInventario()">
+        Inventario
+    </button>
 
-    <button onclick="irContenedores()">Contenedores</button>
+    <button onclick="irContenedores()">
+        Contenedores
+    </button>
 
-    <button>Ventas</button>
+    <button onclick="irProductos()">
+        Productos
+    </button>
 
-    <button>Reportes</button>
+    <button onclick="irVentas()">
+        Ventas
+    </button>
 
+    <button onclick="irCaja()">
+        Caja
+    </button>
+
+    <button onclick="irReportes()">
+        Reportes
+    </button>
+
+    <br><br>
+
+    <button onclick="cerrarSesion()">
+        Cerrar sesión
+    </button>
 
     <script>
 
+        const usuario =
+            JSON.parse(
+                localStorage.getItem("usuario")
+            );
+
+        if (!usuario) {
+
+            window.location.href =
+                "/index.html";
+
+        } else {
+
+            document.getElementById(
+                "bienvenida"
+            ).textContent =
+                "Bienvenido, " + usuario.nombre;
+        }
+
+
         function irPersonal() {
 
-            window.location.href = "/personal.html";
-
+            window.location.href =
+                "/personal.html";
         }
 
 
         function irInventario() {
 
-            window.location.href = "/inventario.html";
-
+            window.location.href =
+                "/inventario.html";
         }
 
 
         function irContenedores() {
 
-            window.location.href = "/contenedores.html";
-
+            window.location.href =
+                "/contenedores.html";
         }
 
-    </script>
+
+        function irProductos() {
+
+            window.location.href =
+                "/productos.html";
+        }
 
 
-    <br><br>
+        function irVentas() {
 
-    <button onclick="cerrarSesion()">Cerrar sesión</button>
-
-
-    <script>
-
-        const usuario =
-            JSON.parse(localStorage.getItem("usuario"));
+            window.location.href =
+                "/ventas.html";
+        }
 
 
-        if (!usuario) {
+        function irCaja() {
 
-            window.location.href = "/index.html";
+            window.location.href =
+                "/caja.html";
+        }
 
-        } else {
 
-            document.getElementById("bienvenida").textContent =
-                "Bienvenido, " + usuario.nombre;
+        function irReportes() {
 
+            window.location.href =
+                "/reportes.html";
         }
 
 
@@ -79,8 +124,8 @@
 
             localStorage.removeItem("usuario");
 
-            window.location.href = "/index.html";
-
+            window.location.href =
+                "/index.html";
         }
 
     </script>
