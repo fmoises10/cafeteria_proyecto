@@ -1,7 +1,10 @@
+
 package com.example.demo.controller;
 
 import com.example.demo.model.Venta;
 import com.example.demo.repository.VentaRepository;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -18,11 +21,24 @@ public class VentaController {
     }
 
     @PostMapping
-    public Venta guardar(@RequestBody Venta venta) {
+    public ResponseEntity<?> guardar(
+            @RequestBody Venta venta,
+            HttpSession session) {
 
+        Long usuarioId = (Long) session.getAttribute("usuarioId");
+
+        if (usuarioId == null) {
+            return ResponseEntity
+                    .status(401)
+                    .body("Debe iniciar sesión para registrar una venta");
+        }
+
+        venta.setUsuarioId(usuarioId);
         venta.setFecha(LocalDateTime.now());
 
-        return ventaRepository.save(venta);
+        Venta ventaGuardada = ventaRepository.save(venta);
+
+        return ResponseEntity.ok(ventaGuardada);
     }
 
     @GetMapping

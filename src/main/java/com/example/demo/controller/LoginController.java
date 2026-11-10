@@ -1,8 +1,12 @@
+
 package com.example.demo.controller;
 
 import com.example.demo.dto.LoginRequest;
+import com.example.demo.dto.LoginResponse;
 import com.example.demo.model.Usuario;
 import com.example.demo.repository.UsuarioRepository;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -16,24 +20,70 @@ public class LoginController {
     }
 
     @PostMapping
-    public Usuario login(@RequestBody LoginRequest datos) {
+    public ResponseEntity<?> login(
+            @RequestBody LoginRequest datos,
+            HttpSession session) {
 
         Usuario usuario = usuarioRepository
                 .findByEmail(datos.getEmail())
                 .orElse(null);
 
-        if (usuario == null) {
-            return null;
+        if (usuario == null ||
+                !usuario.getPassword().equals(datos.getPassword()) ||
+                !usuario.isActivo()) {
+
+            return ResponseEntity
+                    .status(401)
+                    .body("Credenciales incorrectas");
         }
 
-        if (!usuario.getPassword().equals(datos.getPassword())) {
-            return null;
+        session.setAttribute("usuarioId", usuario.getId());
+
+        LoginResponse respuesta = new LoginResponse(
+                usuario.getId(),
+                usuario.getNombre(),
+                usuario.getEmail(),
+                usuario.getRol());
+
+        return ResponseEntity.ok(respuesta);
+    }
+
+    @GetMapping("/actual")
+    public ResponseEntity<?> usuarioActual(HttpSession session) {
+
+        Long usuarioId = (Long) session.getAttribute("usuarioId");
+
+        if (usuarioId == null) {
+            return ResponseEntity
+                    .status(401)
+                    .body("No hay una sesión activa");
         }
 
-        if (!usuario.isActivo()) {
-            return null;
+        Usuario usuario = usuarioRepository
+                .findById(usuarioId)
+                .orElse(null);
+
+        if (usuario == null || !usuario.isActivo()) {
+            session.invalidate();
+
+            return ResponseEntity
+                    .status(401)
+                    .body("Sesión no válida");
         }
 
-        return usuario;
+        return ResponseEntity.ok(
+                new LoginResponse(
+                        usuario.getId(),
+                        usuario.getNombre(),
+                        usuario.getEmail(),
+                        usuario.getRol()));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpSession session) {
+
+        session.invalidate();
+
+        return ResponseEntity.ok("Sesión cerrada correctamente");
     }
 }

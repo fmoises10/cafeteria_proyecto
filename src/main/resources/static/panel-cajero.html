@@ -3,22 +3,23 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Panel Cajero</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Cajero / Barista</title>
 </head>
 
 <body>
 
     <h1>Panel de Cajero / Barista</h1>
 
-    <p id="bienvenida"></p>
+    <p id="bienvenida">Verificando sesión...</p>
 
     <hr>
 
     <h2>Módulos</h2>
 
-    <button>Nuevo Pedido</button>
-    <button>Ventas</button>
-    <button>Escanear Insumo</button>
+    <button onclick="irVentas()">Nuevo Pedido</button>
+    <button onclick="irVentas()">Ventas</button>
+    <button onclick="irContenedores()">Escanear Insumo</button>
 
     <br><br>
 
@@ -26,26 +27,70 @@
 
     <script>
 
-        const usuario = JSON.parse(localStorage.getItem("usuario"));
+        async function verificarSesion() {
 
-        if (!usuario) {
+            try {
 
-            window.location.href = "/index.html";
+                const respuesta = await fetch("/login/actual", {
+                    credentials: "same-origin"
+                });
 
-        } else {
+                if (!respuesta.ok) {
+                    window.location.href = "/index.html";
+                    return;
+                }
 
-            document.getElementById("bienvenida").textContent =
-                "Bienvenido, " + usuario.nombre;
+                const usuario = await respuesta.json();
+
+                if (
+                    usuario.rol !== "CAJERO" &&
+                    usuario.rol !== "BARISTA"
+                ) {
+                    window.location.href = "/index.html";
+                    return;
+                }
+
+                document.getElementById("bienvenida").textContent =
+                    "Bienvenido, " + usuario.nombre;
+
+            } catch (error) {
+
+                console.error(error);
+                window.location.href = "/index.html";
+
+            }
 
         }
 
-        function cerrarSesion() {
+        function irVentas() {
+            window.location.href = "/ventas.html";
+        }
+
+        function irContenedores() {
+            window.location.href = "/contenedores.html";
+        }
+
+        async function cerrarSesion() {
+
+            try {
+
+                await fetch("/login/logout", {
+                    method: "POST",
+                    credentials: "same-origin"
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+            }
 
             localStorage.removeItem("usuario");
-
             window.location.href = "/index.html";
 
         }
+
+        verificarSesion();
 
     </script>
 

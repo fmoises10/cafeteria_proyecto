@@ -1,3 +1,4 @@
+
 package com.example.demo.model;
 
 import jakarta.persistence.Entity;
@@ -16,6 +17,7 @@ public class Consumo {
 
     private Long contenedorId;
     private Long insumoId;
+    private Long usuarioId;
 
     private double cantidad;
 
@@ -46,6 +48,14 @@ public class Consumo {
 
     public void setInsumoId(Long insumoId) {
         this.insumoId = insumoId;
+    }
+
+    public Long getUsuarioId() {
+        return usuarioId;
+    }
+
+    public void setUsuarioId(Long usuarioId) {
+        this.usuarioId = usuarioId;
     }
 
     public double getCantidad() {

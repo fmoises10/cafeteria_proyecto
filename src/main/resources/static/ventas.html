@@ -2,13 +2,11 @@
 <html lang="es">
 
 <head>
-
     <meta charset="UTF-8">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ventas</title>
 
     <style>
-
         body {
             font-family: Arial, sans-serif;
             margin: 30px;
@@ -53,454 +51,319 @@
             margin-top: 15px;
             padding: 10px 20px;
         }
-
     </style>
-
 </head>
 
 <body>
 
     <h1>Ventas</h1>
 
+    <p id="usuarioActual">Verificando sesión...</p>
+
     <hr>
 
     <h2>Registrar venta</h2>
 
     <div>
-
-        <label>
-            Producto:
-        </label>
+        <label>Producto:</label>
 
         <select id="producto">
-
-            <option value="">
-                Seleccione un producto
-            </option>
-
+            <option value="">Seleccione un producto</option>
         </select>
 
-        <label>
-            Cantidad:
-        </label>
+        <label>Cantidad:</label>
 
-        <input
-            type="number"
-            id="cantidad"
-            min="1"
-            value="1"
-        >
+        <input type="number" id="cantidad" min="1" value="1">
 
-        <button onclick="agregarProducto()">
-            Agregar
-        </button>
-
+        <button onclick="agregarProducto()">Agregar</button>
     </div>
 
     <table>
-
         <thead>
-
             <tr>
-
                 <th>Producto</th>
                 <th>Cantidad</th>
                 <th>Precio</th>
                 <th>Subtotal</th>
                 <th>Acción</th>
-
             </tr>
-
         </thead>
 
-        <tbody id="detalleVenta">
-
-        </tbody>
-
+        <tbody id="detalleVenta"></tbody>
     </table>
 
     <br>
 
-    <p id="total">
-        Total: Bs 0.00
-    </p>
+    <p id="total">Total: Bs 0.00</p>
 
-    <label>
-        Método de pago:
-    </label>
+    <label>Método de pago:</label>
 
     <select id="metodoPago">
-
-        <option value="EFECTIVO">
-            EFECTIVO
-        </option>
-
-        <option value="QR">
-            QR
-        </option>
-
-        <option value="TARJETA">
-            TARJETA
-        </option>
-
+        <option value="EFECTIVO">EFECTIVO</option>
+        <option value="QR">QR</option>
+        <option value="TARJETA">TARJETA</option>
     </select>
 
     <br><br>
 
-    <button onclick="registrarVenta()">
-        Registrar venta
-    </button>
+    <button onclick="registrarVenta()">Registrar venta</button>
 
     <p id="mensaje"></p>
 
-    <button
-        id="botonTicket"
-        onclick="imprimirTicket()">
-
-        🖨️ Imprimir ticket
-
+    <button id="botonTicket" onclick="imprimirTicket()">
+        Imprimir ticket
     </button>
 
     <br><br>
 
-    <button onclick="volver()">
-        Volver al panel
-    </button>
-
+    <button onclick="volver()">Volver al panel</button>
 
     <script>
 
         let productos = [];
-
         let carrito = [];
-
         let ultimaVentaId = null;
+        let usuario = null;
 
+        async function verificarSesion() {
+
+            try {
+
+                const respuesta = await fetch("/login/actual", {
+                    credentials: "same-origin"
+                });
+
+                if (!respuesta.ok) {
+                    window.location.href = "/index.html";
+                    return false;
+                }
+
+                usuario = await respuesta.json();
+
+                document.getElementById("usuarioActual").textContent =
+                    "Usuario: " + usuario.nombre +
+                    " | Rol: " + usuario.rol;
+
+                return true;
+
+            } catch (error) {
+
+                console.error(error);
+                window.location.href = "/index.html";
+                return false;
+
+            }
+        }
 
         async function cargarProductos() {
 
-            const respuesta =
-                await fetch("/productos");
+            try {
 
-            productos =
-                await respuesta.json();
+                const respuesta = await fetch("/productos", {
+                    credentials: "same-origin"
+                });
 
-            const select =
-                document.getElementById("producto");
+                if (!respuesta.ok) {
+                    throw new Error("No se pudieron cargar los productos");
+                }
 
-            productos.forEach(producto => {
+                productos = await respuesta.json();
 
-                const opcion =
-                    document.createElement("option");
+                const select = document.getElementById("producto");
 
-                opcion.value =
-                    producto.id;
+                productos.forEach(producto => {
 
-                opcion.textContent =
-                    producto.nombre +
-                    " - Bs " +
-                    producto.precio.toFixed(2);
+                    const opcion = document.createElement("option");
 
-                select.appendChild(opcion);
+                    opcion.value = producto.id;
 
-            });
+                    opcion.textContent =
+                        producto.nombre +
+                        " - Bs " +
+                        producto.precio.toFixed(2);
 
+                    select.appendChild(opcion);
+
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                document.getElementById("mensaje").textContent =
+                    "Error al cargar los productos.";
+
+            }
         }
-
 
         function agregarProducto() {
 
-            const productoId =
-                Number(
-                    document.getElementById(
-                        "producto"
-                    ).value
-                );
+            const productoId = Number(
+                document.getElementById("producto").value
+            );
 
-            const cantidad =
-                Number(
-                    document.getElementById(
-                        "cantidad"
-                    ).value
-                );
+            const cantidad = Number(
+                document.getElementById("cantidad").value
+            );
 
             if (!productoId) {
-
-                alert(
-                    "Seleccione un producto."
-                );
-
+                alert("Seleccione un producto.");
                 return;
             }
 
-            if (cantidad <= 0) {
-
-                alert(
-                    "La cantidad debe ser mayor que cero."
-                );
-
+            if (cantidad <= 0 || !Number.isInteger(cantidad)) {
+                alert("Ingrese una cantidad válida.");
                 return;
             }
 
-
-            const producto =
-                productos.find(
-                    p => p.id === productoId
-                );
+            const producto = productos.find(p => p.id === productoId);
 
             if (!producto) {
                 return;
             }
 
-
             carrito.push({
-
-                productoId:
-                    producto.id,
-
-                nombre:
-                    producto.nombre,
-
-                cantidad:
-                    cantidad,
-
-                precio:
-                    producto.precio,
-
-                subtotal:
-                    cantidad *
-                    producto.precio
-
+                productoId: producto.id,
+                nombre: producto.nombre,
+                cantidad: cantidad,
+                precio: producto.precio,
+                subtotal: cantidad * producto.precio
             });
 
-
             mostrarCarrito();
-
         }
-
 
         function mostrarCarrito() {
 
-            const tabla =
-                document.getElementById(
-                    "detalleVenta"
-                );
+            const tabla = document.getElementById("detalleVenta");
 
             tabla.innerHTML = "";
 
             let total = 0;
 
+            carrito.forEach((item, indice) => {
 
-            carrito.forEach(
-                (item, indice) => {
+                total += item.subtotal;
 
-                    total += item.subtotal;
+                const fila = document.createElement("tr");
 
+                fila.innerHTML = `
+                    <td>${item.nombre}</td>
+                    <td>${item.cantidad}</td>
+                    <td>Bs ${item.precio.toFixed(2)}</td>
+                    <td>Bs ${item.subtotal.toFixed(2)}</td>
+                    <td>
+                        <button onclick="eliminarProducto(${indice})">
+                            Eliminar
+                        </button>
+                    </td>
+                `;
 
-                    const fila =
-                        document.createElement("tr");
+                tabla.appendChild(fila);
 
+            });
 
-                    fila.innerHTML = `
-
-                        <td>
-                            ${item.nombre}
-                        </td>
-
-                        <td>
-                            ${item.cantidad}
-                        </td>
-
-                        <td>
-                            Bs ${item.precio.toFixed(2)}
-                        </td>
-
-                        <td>
-                            Bs ${item.subtotal.toFixed(2)}
-                        </td>
-
-                        <td>
-
-                            <button
-                                onclick="eliminarProducto(${indice})">
-
-                                Eliminar
-
-                            </button>
-
-                        </td>
-
-                    `;
-
-
-                    tabla.appendChild(fila);
-
-                }
-            );
-
-
-            document.getElementById(
-                "total"
-            ).textContent =
-                "Total: Bs " +
-                total.toFixed(2);
-
+            document.getElementById("total").textContent =
+                "Total: Bs " + total.toFixed(2);
         }
-
 
         function eliminarProducto(indice) {
 
-            carrito.splice(
-                indice,
-                1
-            );
+            carrito.splice(indice, 1);
 
             mostrarCarrito();
-
         }
-
 
         async function registrarVenta() {
 
             if (carrito.length === 0) {
-
-                alert(
-                    "Debe agregar al menos un producto."
-                );
-
+                alert("Debe agregar al menos un producto.");
                 return;
             }
 
-
             let total = 0;
 
-
             carrito.forEach(item => {
-
                 total += item.subtotal;
-
             });
 
-
             const metodoPago =
-                document.getElementById(
-                    "metodoPago"
-                ).value;
+                document.getElementById("metodoPago").value;
 
+            const boton = document.querySelector(
+                'button[onclick="registrarVenta()"]'
+            );
+
+            boton.disabled = true;
 
             try {
 
-                const respuestaVenta =
-                    await fetch(
-                        "/ventas",
-                        {
+                const respuestaVenta = await fetch("/ventas", {
 
-                            method: "POST",
+                    method: "POST",
 
-                            headers: {
-                                "Content-Type":
-                                    "application/json"
-                            },
+                    credentials: "same-origin",
 
-                            body: JSON.stringify({
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
 
-                                total:
-                                    total,
+                    body: JSON.stringify({
+                        total: total,
+                        metodoPago: metodoPago
+                    })
 
-                                metodoPago:
-                                    metodoPago
+                });
 
-                            })
-
-                        }
-                    );
-
-
-                if (!respuestaVenta.ok) {
-
-                    document.getElementById(
-                        "mensaje"
-                    ).textContent =
-                        "No se pudo registrar la venta.";
-
+                if (respuestaVenta.status === 401) {
+                    alert("Tu sesión ha expirado. Inicia sesión nuevamente.");
+                    window.location.href = "/index.html";
                     return;
                 }
 
+                if (!respuestaVenta.ok) {
+                    throw new Error("No se pudo registrar la venta.");
+                }
 
-                const venta =
-                    await respuestaVenta.json();
+                const venta = await respuestaVenta.json();
 
-
-                /*
-                 * Guardamos el ID de la venta.
-                 * Lo necesitamos para crear
-                 * los detalles y para imprimir
-                 * el ticket.
-                 */
-
-                ultimaVentaId =
-                    venta.id;
-
-
-                /*
-                 * Registrar cada producto
-                 * de la venta.
-                 */
+                ultimaVentaId = venta.id;
 
                 for (const item of carrito) {
 
-                    await fetch(
-                        "/detalles-venta",
-                        {
+                    const respuestaDetalle = await fetch("/detalles-venta", {
 
-                            method: "POST",
+                        method: "POST",
 
-                            headers: {
-                                "Content-Type":
-                                    "application/json"
-                            },
+                        credentials: "same-origin",
 
-                            body: JSON.stringify({
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
 
-                                ventaId:
-                                    venta.id,
+                        body: JSON.stringify({
 
-                                productoId:
-                                    item.productoId,
+                            ventaId: venta.id,
+                            productoId: item.productoId,
+                            cantidad: item.cantidad,
+                            precio: item.precio
 
-                                cantidad:
-                                    item.cantidad,
+                        })
 
-                                precio:
-                                    item.precio
+                    });
 
-                            })
-
-                        }
-                    );
-
+                    if (!respuestaDetalle.ok) {
+                        throw new Error(
+                            "La venta se guardó, pero hubo un problema al guardar sus detalles."
+                        );
+                    }
                 }
 
-
-                document.getElementById(
-                    "mensaje"
-                ).textContent =
+                document.getElementById("mensaje").textContent =
                     "Venta registrada correctamente.";
 
-
-                /*
-                 * Mostrar botón de ticket.
-                 */
-
-                document.getElementById(
-                    "botonTicket"
-                ).style.display =
+                document.getElementById("botonTicket").style.display =
                     "inline-block";
-
-
-                /*
-                 * Vaciar carrito.
-                 */
 
                 carrito = [];
 
@@ -510,44 +373,46 @@
 
                 console.error(error);
 
-                document.getElementById(
-                    "mensaje"
-                ).textContent =
-                    "Error al conectar con el servidor.";
+                document.getElementById("mensaje").textContent =
+                    error.message || "Error al conectar con el servidor.";
+
+            } finally {
+
+                boton.disabled = false;
 
             }
-
         }
-
 
         function imprimirTicket() {
 
             if (!ultimaVentaId) {
-
-                alert(
-                    "No existe una venta para imprimir."
-                );
-
+                alert("No existe una venta para imprimir.");
                 return;
             }
 
-
             window.location.href =
-                "/ticket.html?id=" +
-                ultimaVentaId;
-
+                "/ticket.html?id=" + ultimaVentaId;
         }
-
 
         function volver() {
 
-            window.location.href =
-                "/panel-admin.html";
-
+            if (usuario && usuario.rol === "ADMINISTRADOR") {
+                window.location.href = "/panel-admin.html";
+            } else {
+                window.location.href = "/panel-cajero.html";
+            }
         }
 
+        async function iniciarPagina() {
 
-        cargarProductos();
+            const sesionActiva = await verificarSesion();
+
+            if (sesionActiva) {
+                await cargarProductos();
+            }
+        }
+
+        iniciarPagina();
 
     </script>
 

@@ -1,9 +1,11 @@
+
 package com.example.demo.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Transient;
 
 import java.time.LocalDateTime;
 
@@ -23,6 +25,15 @@ public class Caja {
     private LocalDateTime fechaCierre;
 
     private boolean abierta;
+
+    private Long usuarioAperturaId;
+    private Long usuarioCierreId;
+
+    @Transient
+    private String usuarioAperturaNombre;
+
+    @Transient
+    private String usuarioCierreNombre;
 
     public Caja() {
     }
@@ -89,5 +100,37 @@ public class Caja {
 
     public void setAbierta(boolean abierta) {
         this.abierta = abierta;
+    }
+
+    public Long getUsuarioAperturaId() {
+        return usuarioAperturaId;
+    }
+
+    public void setUsuarioAperturaId(Long usuarioAperturaId) {
+        this.usuarioAperturaId = usuarioAperturaId;
+    }
+
+    public Long getUsuarioCierreId() {
+        return usuarioCierreId;
+    }
+
+    public void setUsuarioCierreId(Long usuarioCierreId) {
+        this.usuarioCierreId = usuarioCierreId;
+    }
+
+    public String getUsuarioAperturaNombre() {
+        return usuarioAperturaNombre;
+    }
+
+    public void setUsuarioAperturaNombre(String usuarioAperturaNombre) {
+        this.usuarioAperturaNombre = usuarioAperturaNombre;
+    }
+
+    public String getUsuarioCierreNombre() {
+        return usuarioCierreNombre;
+    }
+
+    public void setUsuarioCierreNombre(String usuarioCierreNombre) {
+        this.usuarioCierreNombre = usuarioCierreNombre;
     }
 }

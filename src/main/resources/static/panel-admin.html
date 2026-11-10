@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Administrador</title>
 </head>
 
@@ -10,123 +11,107 @@
 
     <h1>Panel de Administrador</h1>
 
-    <p id="bienvenida"></p>
+    <p id="bienvenida">Verificando sesión...</p>
 
     <hr>
 
     <h2>Módulos</h2>
 
-    <button onclick="irPersonal()">
-        Personal
-    </button>
-
-    <button onclick="irInventario()">
-        Inventario
-    </button>
-
-    <button onclick="irContenedores()">
-        Contenedores
-    </button>
-
-    <button onclick="irProductos()">
-        Productos
-    </button>
-
-    <button onclick="irVentas()">
-        Ventas
-    </button>
-
-    <button onclick="irCaja()">
-        Caja
-    </button>
-
-    <button onclick="irReportes()">
-        Reportes
-    </button>
+    <button onclick="irPersonal()">Personal</button>
+    <button onclick="irInventario()">Inventario</button>
+    <button onclick="irContenedores()">Contenedores</button>
+    <button onclick="irProductos()">Productos</button>
+    <button onclick="irVentas()">Ventas</button>
+    <button onclick="irCaja()">Caja</button>
+    <button onclick="irReportes()">Reportes</button>
 
     <br><br>
 
-    <button onclick="cerrarSesion()">
-        Cerrar sesión
-    </button>
+    <button onclick="cerrarSesion()">Cerrar sesión</button>
 
     <script>
 
-        const usuario =
-            JSON.parse(
-                localStorage.getItem("usuario")
-            );
+        async function verificarSesion() {
 
-        if (!usuario) {
+            try {
 
-            window.location.href =
-                "/index.html";
+                const respuesta = await fetch("/login/actual", {
+                    credentials: "same-origin"
+                });
 
-        } else {
+                if (!respuesta.ok) {
+                    window.location.href = "/index.html";
+                    return;
+                }
 
-            document.getElementById(
-                "bienvenida"
-            ).textContent =
-                "Bienvenido, " + usuario.nombre;
+                const usuario = await respuesta.json();
+
+                if (usuario.rol !== "ADMINISTRADOR") {
+                    window.location.href = "/index.html";
+                    return;
+                }
+
+                document.getElementById("bienvenida").textContent =
+                    "Bienvenido, " + usuario.nombre;
+
+            } catch (error) {
+
+                console.error(error);
+                window.location.href = "/index.html";
+
+            }
+
         }
-
 
         function irPersonal() {
-
-            window.location.href =
-                "/personal.html";
+            window.location.href = "/personal.html";
         }
-
 
         function irInventario() {
-
-            window.location.href =
-                "/inventario.html";
+            window.location.href = "/inventario.html";
         }
-
 
         function irContenedores() {
-
-            window.location.href =
-                "/contenedores.html";
+            window.location.href = "/contenedores.html";
         }
-
 
         function irProductos() {
-
-            window.location.href =
-                "/productos.html";
+            window.location.href = "/productos.html";
         }
-
 
         function irVentas() {
-
-            window.location.href =
-                "/ventas.html";
+            window.location.href = "/ventas.html";
         }
-
 
         function irCaja() {
-
-            window.location.href =
-                "/caja.html";
+            window.location.href = "/caja.html";
         }
-
 
         function irReportes() {
-
-            window.location.href =
-                "/reportes.html";
+            window.location.href = "/reportes.html";
         }
 
+        async function cerrarSesion() {
 
-        function cerrarSesion() {
+            try {
+
+                await fetch("/login/logout", {
+                    method: "POST",
+                    credentials: "same-origin"
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+            }
 
             localStorage.removeItem("usuario");
+            window.location.href = "/index.html";
 
-            window.location.href =
-                "/index.html";
         }
+
+        verificarSesion();
 
     </script>
 

@@ -1,3 +1,4 @@
+
 package com.example.demo.model;
 
 import jakarta.persistence.Entity;
@@ -17,6 +18,7 @@ public class Venta {
     private double total;
     private String metodoPago;
     private LocalDateTime fecha;
+    private Long usuarioId;
 
     public Venta() {
     }
@@ -51,5 +53,13 @@ public class Venta {
 
     public void setFecha(LocalDateTime fecha) {
         this.fecha = fecha;
+    }
+
+    public Long getUsuarioId() {
+        return usuarioId;
+    }
+
+    public void setUsuarioId(Long usuarioId) {
+        this.usuarioId = usuarioId;
     }
 }

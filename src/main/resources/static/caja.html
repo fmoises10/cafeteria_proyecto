@@ -3,17 +3,16 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Caja</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Caja</title>
 </head>
 
 <body>
 
     <h1>Control de Caja</h1>
-
     <hr>
 
     <h2>Estado de caja</h2>
-
     <p id="estado"></p>
 
     <div id="apertura">
@@ -21,25 +20,17 @@
         <h2>Abrir caja</h2>
 
         <label>Monto inicial:</label>
-
-        <input
-            type="number"
-            id="montoInicial"
-            step="0.01"
-            min="0"
-        >
+        <input type="number" id="montoInicial" step="0.01" min="0">
 
         <br><br>
 
-        <button onclick="abrirCaja()">
-            Abrir caja
-        </button>
+        <button onclick="abrirCaja()">Abrir caja</button>
 
     </div>
 
     <div id="cierre" style="display:none;">
 
-        <h2>Caja abierta</h2>
+        <h2>Estado actual</h2>
 
         <p>
             Monto inicial:
@@ -47,32 +38,60 @@
         </p>
 
         <p>
-            Efectivo esperado actualmente:
-            <strong>
-                Bs <span id="mostrarEsperado">0.00</span>
-            </strong>
+            Efectivo esperado:
+            <strong>Bs <span id="mostrarEsperado">0.00</span></strong>
         </p>
+
+        <hr>
+
+        <h2>Resumen de movimientos</h2>
+
+        <p>
+            Cantidad de ventas en efectivo:
+            <strong id="cantidadEfectivo">0</strong>
+        </p>
+
+        <p>
+            Total de ventas en efectivo:
+            <strong>Bs <span id="totalEfectivo">0.00</span></strong>
+        </p>
+
+        <h3>Ventas por método de pago</h3>
+
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Método de pago</th>
+                    <th>Total vendido</th>
+                </tr>
+            </thead>
+            <tbody id="resumenMetodos"></tbody>
+        </table>
+
+        <h3>Detalle de ventas en efectivo</h3>
+
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>ID venta</th>
+                    <th>Fecha</th>
+                    <th>Total</th>
+                    <th>Usuario ID</th>
+                </tr>
+            </thead>
+            <tbody id="movimientosEfectivo"></tbody>
+        </table>
 
         <hr>
 
         <h2>Cerrar caja</h2>
 
-        <label>
-            Dinero contado al cerrar:
-        </label>
-
-        <input
-            type="number"
-            id="montoFinal"
-            step="0.01"
-            min="0"
-        >
+        <label>Dinero contado al cerrar:</label>
+        <input type="number" id="montoFinal" step="0.01" min="0">
 
         <br><br>
 
-        <button onclick="cerrarCaja()">
-            Cerrar caja
-        </button>
+        <button onclick="cerrarCaja()">Cerrar caja</button>
 
     </div>
 
@@ -81,9 +100,7 @@
     <h2>Historial de cajas</h2>
 
     <table border="1">
-
         <thead>
-
             <tr>
                 <th>ID</th>
                 <th>Apertura</th>
@@ -91,20 +108,17 @@
                 <th>Efectivo esperado</th>
                 <th>Monto contado</th>
                 <th>Diferencia</th>
+                <th>Usuario apertura</th>
+                <th>Usuario cierre</th>
                 <th>Estado</th>
             </tr>
-
         </thead>
-
         <tbody id="historial"></tbody>
-
     </table>
 
     <br>
 
-    <button onclick="volver()">
-        Volver
-    </button>
+    <button onclick="volver()">Volver</button>
 
     <p id="mensaje"></p>
 
@@ -112,209 +126,295 @@
 
         async function cargarCaja() {
 
-            const respuesta =
-                await fetch("/cajas/actual");
+            try {
 
-            const caja =
-                await respuesta.json();
+                const respuesta = await fetch("/cajas/actual", {
+                    credentials: "same-origin"
+                });
 
-            const estado =
-                document.getElementById("estado");
+                if (!respuesta.ok) {
+                    document.getElementById("estado").textContent =
+                        "No se pudo consultar la caja.";
+                    return;
+                }
 
-            const apertura =
-                document.getElementById("apertura");
+                const caja = await respuesta.json();
 
-            const cierre =
-                document.getElementById("cierre");
+                const apertura = document.getElementById("apertura");
+                const cierre = document.getElementById("cierre");
 
-            if (!caja || !caja.id) {
+                if (!caja || !caja.id) {
 
-                estado.textContent =
-                    "No hay una caja abierta.";
+                    document.getElementById("estado").textContent =
+                        "No hay una caja abierta.";
 
-                apertura.style.display = "block";
+                    apertura.style.display = "block";
+                    cierre.style.display = "none";
 
-                cierre.style.display = "none";
+                } else {
 
-            } else {
+                    document.getElementById("estado").textContent =
+                        "Caja abierta. ID: " + caja.id;
 
-                estado.textContent =
-                    "Caja abierta. ID: " + caja.id;
+                    apertura.style.display = "none";
+                    cierre.style.display = "block";
 
-                apertura.style.display = "none";
+                    document.getElementById("mostrarInicial").textContent =
+                        caja.montoInicial.toFixed(2);
 
-                cierre.style.display = "block";
+                    document.getElementById("mostrarEsperado").textContent =
+                        caja.efectivoEsperado.toFixed(2);
 
-                document.getElementById(
-                    "mostrarInicial"
-                ).textContent =
-                    caja.montoInicial.toFixed(2);
+                    await cargarResumen();
+                }
 
-                document.getElementById(
-                    "mostrarEsperado"
-                ).textContent =
-                    caja.efectivoEsperado.toFixed(2);
+            } catch (error) {
+
+                console.error(error);
+
+                document.getElementById("estado").textContent =
+                    "Error al consultar la caja.";
+            }
+        }
+
+        async function cargarResumen() {
+
+            try {
+
+                const respuesta = await fetch("/cajas/actual/resumen", {
+                    credentials: "same-origin"
+                });
+
+                if (!respuesta.ok) {
+                    return;
+                }
+
+                const resumen = await respuesta.json();
+
+                document.getElementById("cantidadEfectivo").textContent =
+                    resumen.cantidadVentasEfectivo;
+
+                document.getElementById("totalEfectivo").textContent =
+                    resumen.totalVentasEfectivo.toFixed(2);
+
+                document.getElementById("mostrarInicial").textContent =
+                    resumen.montoInicial.toFixed(2);
+
+                document.getElementById("mostrarEsperado").textContent =
+                    resumen.efectivoEsperado.toFixed(2);
+
+                const tablaMetodos =
+                    document.getElementById("resumenMetodos");
+
+                tablaMetodos.innerHTML = "";
+
+                const metodos = Object.entries(
+                    resumen.totalesPorMetodoPago
+                );
+
+                if (metodos.length === 0) {
+
+                    tablaMetodos.innerHTML =
+                        '<tr><td colspan="2">Todavía no hay ventas.</td></tr>';
+
+                } else {
+
+                    metodos.forEach(([metodo, total]) => {
+
+                        const fila = document.createElement("tr");
+
+                        fila.innerHTML = `
+                            <td>${metodo}</td>
+                            <td>Bs ${total.toFixed(2)}</td>
+                        `;
+
+                        tablaMetodos.appendChild(fila);
+                    });
+                }
+
+                const tablaMovimientos =
+                    document.getElementById("movimientosEfectivo");
+
+                tablaMovimientos.innerHTML = "";
+
+                if (resumen.movimientosEfectivo.length === 0) {
+
+                    tablaMovimientos.innerHTML =
+                        '<tr><td colspan="4">No hay ventas en efectivo.</td></tr>';
+
+                } else {
+
+                    resumen.movimientosEfectivo.forEach(venta => {
+
+                        const fila = document.createElement("tr");
+
+                        fila.innerHTML = `
+                            <td>${venta.id}</td>
+                            <td>${formatearFecha(venta.fecha)}</td>
+                            <td>Bs ${venta.total.toFixed(2)}</td>
+                            <td>${venta.usuarioId ?? "-"}</td>
+                        `;
+
+                        tablaMovimientos.appendChild(fila);
+                    });
+                }
+
+            } catch (error) {
+
+                console.error(error);
             }
         }
 
         async function abrirCaja() {
 
-            const monto =
-                parseFloat(
-                    document.getElementById(
-                        "montoInicial"
-                    ).value
-                );
+            const monto = parseFloat(
+                document.getElementById("montoInicial").value
+            );
 
             if (isNaN(monto) || monto < 0) {
-
-                alert(
-                    "Ingrese un monto inicial válido."
-                );
-
+                alert("Ingrese un monto inicial válido.");
                 return;
             }
 
-            const respuesta =
-                await fetch(
+            try {
+
+                const respuesta = await fetch(
                     "/cajas/abrir?montoInicial=" + monto,
                     {
-                        method: "POST"
+                        method: "POST",
+                        credentials: "same-origin"
                     }
                 );
 
-            const caja =
-                await respuesta.json();
+                if (!respuesta.ok) {
+                    document.getElementById("mensaje").textContent =
+                        await respuesta.text();
+                    return;
+                }
 
-            if (caja && caja.id) {
+                const caja = await respuesta.json();
 
-                document.getElementById(
-                    "mensaje"
-                ).textContent =
-                    "Caja abierta correctamente.";
+                if (caja && caja.id) {
 
-                document.getElementById(
-                    "montoInicial"
-                ).value = "";
+                    document.getElementById("mensaje").textContent =
+                        "Caja abierta correctamente.";
 
-                cargarCaja();
-                cargarHistorial();
+                    document.getElementById("montoInicial").value = "";
 
-            } else {
+                    await cargarCaja();
+                    await cargarHistorial();
+                }
 
-                document.getElementById(
-                    "mensaje"
-                ).textContent =
-                    "No se pudo abrir la caja.";
+            } catch (error) {
+
+                console.error(error);
+
+                document.getElementById("mensaje").textContent =
+                    "Error al abrir la caja.";
             }
         }
 
         async function cerrarCaja() {
 
-            const monto =
-                parseFloat(
-                    document.getElementById(
-                        "montoFinal"
-                    ).value
-                );
+            const monto = parseFloat(
+                document.getElementById("montoFinal").value
+            );
 
             if (isNaN(monto) || monto < 0) {
-
-                alert(
-                    "Ingrese un monto final válido."
-                );
-
+                alert("Ingrese un monto final válido.");
                 return;
             }
 
-            const respuesta =
-                await fetch(
+            try {
+
+                const respuesta = await fetch(
                     "/cajas/cerrar?montoFinal=" + monto,
                     {
-                        method: "POST"
+                        method: "POST",
+                        credentials: "same-origin"
                     }
                 );
 
-            const caja =
-                await respuesta.json();
+                if (!respuesta.ok) {
+                    document.getElementById("mensaje").textContent =
+                        await respuesta.text();
+                    return;
+                }
 
-            if (caja && caja.id) {
+                const caja = await respuesta.json();
 
-                document.getElementById(
-                    "mensaje"
-                ).textContent =
-                    "Caja cerrada correctamente. " +
-                    "Diferencia: Bs " +
-                    caja.diferencia.toFixed(2);
+                if (caja && caja.id) {
 
-                document.getElementById(
-                    "montoFinal"
-                ).value = "";
+                    document.getElementById("mensaje").textContent =
+                        "Caja cerrada correctamente. Diferencia: Bs " +
+                        caja.diferencia.toFixed(2);
 
-                cargarCaja();
-                cargarHistorial();
+                    document.getElementById("montoFinal").value = "";
 
-            } else {
+                    await cargarCaja();
+                    await cargarHistorial();
+                }
 
-                document.getElementById(
-                    "mensaje"
-                ).textContent =
-                    "No hay una caja abierta.";
+            } catch (error) {
+
+                console.error(error);
+
+                document.getElementById("mensaje").textContent =
+                    "Error al cerrar la caja.";
             }
         }
 
         async function cargarHistorial() {
 
-            const respuesta =
-                await fetch("/cajas");
+            try {
 
-            const cajas =
-                await respuesta.json();
+                const respuesta = await fetch("/cajas", {
+                    credentials: "same-origin"
+                });
 
-            const tabla =
-                document.getElementById(
-                    "historial"
-                );
+                if (!respuesta.ok) {
+                    return;
+                }
 
-            tabla.innerHTML = "";
+                const cajas = await respuesta.json();
 
-            cajas.forEach(caja => {
+                const tabla = document.getElementById("historial");
 
-                const fila =
-                    document.createElement("tr");
+                tabla.innerHTML = "";
 
-                fila.innerHTML = `
+                cajas.forEach(caja => {
 
-                    <td>${caja.id}</td>
+                    const fila = document.createElement("tr");
 
-                    <td>
-                        ${formatearFecha(caja.fechaApertura)}
-                    </td>
+                    fila.innerHTML = `
 
-                    <td>
-                        Bs ${caja.montoInicial.toFixed(2)}
-                    </td>
+                        <td>${caja.id}</td>
 
-                    <td>
-                        Bs ${caja.efectivoEsperado.toFixed(2)}
-                    </td>
+                        <td>${formatearFecha(caja.fechaApertura)}</td>
 
-                    <td>
-                        Bs ${caja.montoFinal.toFixed(2)}
-                    </td>
+                        <td>Bs ${caja.montoInicial.toFixed(2)}</td>
 
-                    <td>
-                        Bs ${caja.diferencia.toFixed(2)}
-                    </td>
+                        <td>Bs ${caja.efectivoEsperado.toFixed(2)}</td>
 
-                    <td>
-                        ${caja.abierta ? "ABIERTA" : "CERRADA"}
-                    </td>
-                `;
+                        <td>Bs ${caja.montoFinal.toFixed(2)}</td>
 
-                tabla.appendChild(fila);
+                        <td>Bs ${caja.diferencia.toFixed(2)}</td>
 
-            });
+                        <td>${caja.usuarioAperturaNombre ?? "-"}</td>
+
+                        <td>${caja.usuarioCierreNombre ?? "-"}</td>
+
+                        <td>${caja.abierta ? "ABIERTA" : "CERRADA"}</td>
+
+                    `;
+
+                    tabla.appendChild(fila);
+                });
+
+            } catch (error) {
+
+                console.error(error);
+            }
         }
 
         function formatearFecha(fecha) {
@@ -327,9 +427,7 @@
         }
 
         function volver() {
-
-            window.location.href =
-                "/panel-admin.html";
+            window.location.href = "/panel-admin.html";
         }
 
         cargarCaja();
