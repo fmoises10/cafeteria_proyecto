@@ -1,6 +1,6 @@
-
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,378 +10,515 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
     <style>
-        body { background: #f4f6f9; color: #263238; }
-        .navbar { background: #172554; }
-        .card { border: none; border-radius: 12px; box-shadow: 0 3px 12px rgba(0,0,0,.05); }
-        .stat-icon { font-size: 28px; opacity: .8; }
-        .stat-value { font-size: 25px; font-weight: 700; }
-        .section-title { font-weight: 700; color: #172554; }
-        .table thead th { background: #eef2ff; white-space: nowrap; }
-        .table td { vertical-align: middle; white-space: nowrap; }
-        .btn-primary { background: #1e40af; border-color: #1e40af; }
+        body {
+            background: #f4f6f9;
+            color: #263238;
+        }
+
+        .navbar {
+            background: #172554;
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, .05);
+        }
+
+        .stat-icon {
+            font-size: 28px;
+            opacity: .8;
+        }
+
+        .stat-value {
+            font-size: 25px;
+            font-weight: 700;
+        }
+
+        .section-title {
+            font-weight: 700;
+            color: #172554;
+        }
+
+        .table thead th {
+            background: #eef2ff;
+            white-space: nowrap;
+        }
+
+        .table td {
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: #1e40af;
+            border-color: #1e40af;
+        }
+
+        .modal-content {
+            border: none;
+            border-radius: 16px;
+        }
+
+        .modal-header {
+            border-bottom: none;
+        }
+
+        .modal-footer {
+            border-top: none;
+        }
     </style>
 </head>
 
 <body>
 
-<nav class="navbar navbar-dark px-3 py-3">
-    <div class="container-fluid">
-        <span class="navbar-brand fw-bold">
-            <i class="bi bi-cash-stack me-2"></i>
-            Sistema de Cafetería
-        </span>
-        <span class="text-white">Control de Caja</span>
-    </div>
-</nav>
-
-<div class="container-fluid px-3 px-md-4 py-4">
-
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-        <div>
-            <h3 class="fw-bold mb-1">Control de Caja</h3>
-            <p class="text-secondary mb-0">Administración de apertura, movimientos y cierre</p>
+    <nav class="navbar navbar-dark px-3 py-3">
+        <div class="container-fluid">
+            <span class="navbar-brand fw-bold">
+                <i class="bi bi-cash-stack me-2"></i>
+                Sistema de Cafetería
+            </span>
+            <span class="text-white">Control de Caja</span>
         </div>
-        <span id="estado" class="badge text-bg-secondary fs-6 p-2">
-            Consultando caja...
-        </span>
-    </div>
+    </nav>
 
-    <div id="apertura" class="card p-4 mb-4">
-        <h5 class="section-title mb-3">
-            <i class="bi bi-unlock me-2"></i>Abrir caja
-        </h5>
-        <p class="text-secondary">Registra el dinero inicial disponible en caja.</p>
+    <div class="container-fluid px-3 px-md-4 py-4">
 
-        <div class="row align-items-end">
-            <div class="col-md-4">
-                <label class="form-label">Monto inicial (Bs)</label>
-                <input type="number" id="montoInicial" class="form-control"
-                       step="0.01" min="0" placeholder="Ej. 100.00">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <h3 class="fw-bold mb-1">Control de Caja</h3>
+                <p class="text-secondary mb-0">Administración de apertura, movimientos y cierre</p>
             </div>
-            <div class="col-md-3 mt-3 mt-md-0">
-                <button class="btn btn-primary w-100" onclick="abrirCaja()">
-                    <i class="bi bi-unlock me-1"></i> Abrir caja
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div id="cierre" style="display:none;">
-
-        <h5 class="section-title mb-3">Resumen de caja actual</h5>
-
-        <div class="row g-3 mb-4">
-            <div class="col-md-4">
-                <div class="card p-3">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <p class="text-secondary mb-1">Monto inicial</p>
-                            <div class="stat-value">Bs <span id="mostrarInicial">0.00</span></div>
-                        </div>
-                        <i class="bi bi-wallet2 stat-icon text-primary"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card p-3">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <p class="text-secondary mb-1">Ventas en efectivo</p>
-                            <div class="stat-value">Bs <span id="totalEfectivo">0.00</span></div>
-                            <small class="text-secondary"><span id="cantidadEfectivo">0</span> ventas</small>
-                        </div>
-                        <i class="bi bi-cash stat-icon text-success"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card p-3">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <p class="text-secondary mb-1">Efectivo esperado</p>
-                            <div class="stat-value text-success">Bs <span id="mostrarEsperado">0.00</span></div>
-                        </div>
-                        <i class="bi bi-calculator stat-icon text-success"></i>
-                    </div>
-                </div>
-            </div>
+            <span id="estado" class="badge text-bg-secondary fs-6 p-2">
+                Consultando caja...
+            </span>
         </div>
 
-        <div class="card p-4 mb-4">
-            <h5 class="section-title mb-3">Ventas por método de pago</h5>
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead>
-                        <tr><th>Método de pago</th><th>Total vendido</th></tr>
-                    </thead>
-                    <tbody id="resumenMetodos"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="card p-4 mb-4">
-            <h5 class="section-title mb-3">Detalle de ventas en efectivo</h5>
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead>
-                        <tr>
-                            <th>ID venta</th><th>Fecha</th><th>Total</th><th>Usuario ID</th>
-                        </tr>
-                    </thead>
-                    <tbody id="movimientosEfectivo"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="card p-4 mb-4">
-            <h5 class="section-title mb-2">
-                <i class="bi bi-lock me-2"></i>Cerrar caja
+        <div id="apertura" class="card p-4 mb-4">
+            <h5 class="section-title mb-3">
+                <i class="bi bi-unlock me-2"></i>Abrir caja
             </h5>
-            <p class="text-secondary">
-                Cuenta el dinero físico disponible e ingresa el total contado.
-            </p>
+            <p class="text-secondary">Registra el dinero inicial disponible en caja.</p>
 
             <div class="row align-items-end">
                 <div class="col-md-4">
-                    <label class="form-label">Dinero contado (Bs)</label>
-                    <input type="number" id="montoFinal" class="form-control"
-                           step="0.01" min="0" placeholder="Ej. 108.00">
+                    <label class="form-label">Monto inicial (Bs)</label>
+                    <input type="number" id="montoInicial" class="form-control" step="0.01" min="0"
+                        placeholder="Ej. 100.00">
                 </div>
                 <div class="col-md-3 mt-3 mt-md-0">
-                    <button class="btn btn-danger w-100" onclick="cerrarCaja()">
-                        <i class="bi bi-lock me-1"></i> Cerrar caja
+                    <button class="btn btn-primary w-100" onclick="abrirCaja()">
+                        <i class="bi bi-unlock me-1"></i> Abrir caja
                     </button>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="card p-4 mb-4">
-        <h5 class="section-title mb-3">
-            <i class="bi bi-clock-history me-2"></i>Historial de cajas
-        </h5>
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>ID</th><th>Apertura</th><th>Monto inicial</th>
-                        <th>Efectivo esperado</th><th>Monto contado</th>
-                        <th>Diferencia</th><th>Usuario apertura</th>
-                        <th>Usuario cierre</th><th>Estado</th>
-                    </tr>
-                </thead>
-                <tbody id="historial"></tbody>
-            </table>
+        <div id="cierre" style="display:none;">
+
+            <h5 class="section-title mb-3">Resumen de caja actual</h5>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="card p-3">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <p class="text-secondary mb-1">Monto inicial</p>
+                                <div class="stat-value">Bs <span id="mostrarInicial">0.00</span></div>
+                            </div>
+                            <i class="bi bi-wallet2 stat-icon text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card p-3">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <p class="text-secondary mb-1">Ventas en efectivo</p>
+                                <div class="stat-value">Bs <span id="totalEfectivo">0.00</span></div>
+                                <small class="text-secondary"><span id="cantidadEfectivo">0</span> ventas</small>
+                            </div>
+                            <i class="bi bi-cash stat-icon text-success"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card p-3">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <p class="text-secondary mb-1">Efectivo esperado</p>
+                                <div class="stat-value text-success">Bs <span id="mostrarEsperado">0.00</span></div>
+                            </div>
+                            <i class="bi bi-calculator stat-icon text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card p-4 mb-4">
+                <h5 class="section-title mb-3">Ventas por método de pago</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Método de pago</th>
+                                <th>Total vendido</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resumenMetodos"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card p-4 mb-4">
+                <h5 class="section-title mb-3">Detalle de ventas en efectivo</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID venta</th>
+                                <th>Fecha</th>
+                                <th>Total</th>
+                                <th>Usuario ID</th>
+                            </tr>
+                        </thead>
+                        <tbody id="movimientosEfectivo"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card p-4 mb-4">
+                <h5 class="section-title mb-2">
+                    <i class="bi bi-lock me-2"></i>Cerrar caja
+                </h5>
+                <p class="text-secondary">
+                    Cuenta el dinero físico disponible e ingresa el total contado.
+                </p>
+
+                <div class="row align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label">Dinero contado (Bs)</label>
+                        <input type="number" id="montoFinal" class="form-control" step="0.01" min="0"
+                            placeholder="Ej. 108.00">
+                    </div>
+                    <div class="col-md-3 mt-3 mt-md-0">
+                        <button class="btn btn-danger w-100" onclick="cerrarCaja()">
+                            <i class="bi bi-lock me-1"></i> Cerrar caja
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card p-4 mb-4">
+            <h5 class="section-title mb-3">
+                <i class="bi bi-clock-history me-2"></i>Historial de cajas
+            </h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Apertura</th>
+                            <th>Monto inicial</th>
+                            <th>Efectivo esperado</th>
+                            <th>Monto contado</th>
+                            <th>Diferencia</th>
+                            <th>Usuario apertura</th>
+                            <th>Usuario cierre</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historial"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <button class="btn btn-outline-secondary" onclick="volver()">
+                <i class="bi bi-arrow-left me-1"></i> Volver
+            </button>
+            <p id="mensaje" class="mb-0 fw-semibold"></p>
         </div>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <button class="btn btn-outline-secondary" onclick="volver()">
-            <i class="bi bi-arrow-left me-1"></i> Volver
-        </button>
-        <p id="mensaje" class="mb-0 fw-semibold"></p>
+    <!-- Modal de confirmación de cierre -->
+    <div class="modal fade" id="modalConfirmarCierre" tabindex="-1" aria-labelledby="tituloModalCierre"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="tituloModalCierre">
+                        <i class="bi bi-exclamation-circle text-warning me-2"></i>
+                        Confirmar cierre de caja
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+
+                <div class="modal-body text-center py-4">
+                    <p class="text-secondary mb-2">
+                        Estás a punto de cerrar la caja actual.
+                    </p>
+
+                    <div class="bg-light rounded-3 p-3 mb-3">
+                        <small class="text-secondary d-block">Dinero contado</small>
+                        <h3 class="fw-bold text-primary mb-0">
+                            Bs <span id="modalMontoFinal">0.00</span>
+                        </h3>
+                    </div>
+
+                    <p class="mb-0">
+                        ¿Confirmas que deseas cerrar esta caja?
+                    </p>
+                    <small class="text-danger">
+                        Esta operación registrará el cierre de caja.
+                    </small>
+                </div>
+
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn btn-danger px-4" id="btnConfirmarCierre"
+                        onclick="confirmarCierreCaja()">
+                        <i class="bi bi-lock me-1"></i> Confirmar cierre
+                    </button>
+                </div>
+
+            </div>
+        </div>
     </div>
-</div>
 
-<script>
-    async function cargarCaja() {
-        try {
-            const respuesta = await fetch("/cajas/actual", {
-                credentials: "same-origin"
-            });
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-            if (!respuesta.ok) {
-                document.getElementById("estado").textContent = "No se pudo consultar la caja.";
-                return;
+    <script>
+        async function cargarCaja() {
+            try {
+                const respuesta = await fetch("/cajas/actual", {
+                    credentials: "same-origin"
+                });
+
+                if (!respuesta.ok) {
+                    document.getElementById("estado").textContent = "No se pudo consultar la caja.";
+                    return;
+                }
+
+                const caja = await respuesta.json();
+                const apertura = document.getElementById("apertura");
+                const cierre = document.getElementById("cierre");
+
+                if (!caja || !caja.id) {
+                    document.getElementById("estado").textContent = "Caja cerrada";
+                    document.getElementById("estado").className =
+                        "badge text-bg-secondary fs-6 p-2";
+                    apertura.style.display = "block";
+                    cierre.style.display = "none";
+                } else {
+                    document.getElementById("estado").textContent = "Caja abierta. ID: " + caja.id;
+                    document.getElementById("estado").className =
+                        "badge text-bg-success fs-6 p-2";
+                    apertura.style.display = "none";
+                    cierre.style.display = "block";
+
+                    document.getElementById("mostrarInicial").textContent =
+                        Number(caja.montoInicial).toFixed(2);
+                    document.getElementById("mostrarEsperado").textContent =
+                        Number(caja.efectivoEsperado).toFixed(2);
+
+                    await cargarResumen();
+                }
+            } catch (error) {
+                console.error(error);
+                document.getElementById("estado").textContent = "Error al consultar la caja.";
             }
-
-            const caja = await respuesta.json();
-            const apertura = document.getElementById("apertura");
-            const cierre = document.getElementById("cierre");
-
-            if (!caja || !caja.id) {
-                document.getElementById("estado").textContent = "Caja cerrada";
-                document.getElementById("estado").className =
-                    "badge text-bg-secondary fs-6 p-2";
-                apertura.style.display = "block";
-                cierre.style.display = "none";
-            } else {
-                document.getElementById("estado").textContent = "Caja abierta. ID: " + caja.id;
-                document.getElementById("estado").className =
-                    "badge text-bg-success fs-6 p-2";
-                apertura.style.display = "none";
-                cierre.style.display = "block";
-
-                document.getElementById("mostrarInicial").textContent =
-                    Number(caja.montoInicial).toFixed(2);
-                document.getElementById("mostrarEsperado").textContent =
-                    Number(caja.efectivoEsperado).toFixed(2);
-
-                await cargarResumen();
-            }
-        } catch (error) {
-            console.error(error);
-            document.getElementById("estado").textContent = "Error al consultar la caja.";
         }
-    }
 
-    async function cargarResumen() {
-        try {
-            const respuesta = await fetch("/cajas/actual/resumen", {
-                credentials: "same-origin"
-            });
-            if (!respuesta.ok) return;
+        async function cargarResumen() {
+            try {
+                const respuesta = await fetch("/cajas/actual/resumen", {
+                    credentials: "same-origin"
+                });
+                if (!respuesta.ok) return;
 
-            const resumen = await respuesta.json();
+                const resumen = await respuesta.json();
 
-            document.getElementById("cantidadEfectivo").textContent =
-                resumen.cantidadVentasEfectivo;
-            document.getElementById("totalEfectivo").textContent =
-                Number(resumen.totalVentasEfectivo).toFixed(2);
-            document.getElementById("mostrarInicial").textContent =
-                Number(resumen.montoInicial).toFixed(2);
-            document.getElementById("mostrarEsperado").textContent =
-                Number(resumen.efectivoEsperado).toFixed(2);
+                document.getElementById("cantidadEfectivo").textContent =
+                    resumen.cantidadVentasEfectivo;
+                document.getElementById("totalEfectivo").textContent =
+                    Number(resumen.totalVentasEfectivo).toFixed(2);
+                document.getElementById("mostrarInicial").textContent =
+                    Number(resumen.montoInicial).toFixed(2);
+                document.getElementById("mostrarEsperado").textContent =
+                    Number(resumen.efectivoEsperado).toFixed(2);
 
-            const tablaMetodos = document.getElementById("resumenMetodos");
-            tablaMetodos.innerHTML = "";
+                const tablaMetodos = document.getElementById("resumenMetodos");
+                tablaMetodos.innerHTML = "";
 
-            const metodos = Object.entries(resumen.totalesPorMetodoPago);
+                const metodos = Object.entries(resumen.totalesPorMetodoPago);
 
-            if (metodos.length === 0) {
-                tablaMetodos.innerHTML =
-                    '<tr><td colspan="2" class="text-center text-secondary">Todavía no hay ventas.</td></tr>';
-            } else {
-                metodos.forEach(([metodo, total]) => {
-                    const fila = document.createElement("tr");
-                    fila.innerHTML = `
+                if (metodos.length === 0) {
+                    tablaMetodos.innerHTML =
+                        '<tr><td colspan="2" class="text-center text-secondary">Todavía no hay ventas.</td></tr>';
+                } else {
+                    metodos.forEach(([metodo, total]) => {
+                        const fila = document.createElement("tr");
+                        fila.innerHTML = `
                         <td>${metodo}</td>
                         <td>Bs ${Number(total).toFixed(2)}</td>
                     `;
-                    tablaMetodos.appendChild(fila);
-                });
-            }
+                        tablaMetodos.appendChild(fila);
+                    });
+                }
 
-            const tablaMovimientos = document.getElementById("movimientosEfectivo");
-            tablaMovimientos.innerHTML = "";
+                const tablaMovimientos = document.getElementById("movimientosEfectivo");
+                tablaMovimientos.innerHTML = "";
 
-            if (resumen.movimientosEfectivo.length === 0) {
-                tablaMovimientos.innerHTML =
-                    '<tr><td colspan="4" class="text-center text-secondary">No hay ventas en efectivo.</td></tr>';
-            } else {
-                resumen.movimientosEfectivo.forEach(venta => {
-                    const fila = document.createElement("tr");
-                    fila.innerHTML = `
+                if (resumen.movimientosEfectivo.length === 0) {
+                    tablaMovimientos.innerHTML =
+                        '<tr><td colspan="4" class="text-center text-secondary">No hay ventas en efectivo.</td></tr>';
+                } else {
+                    resumen.movimientosEfectivo.forEach(venta => {
+                        const fila = document.createElement("tr");
+                        fila.innerHTML = `
                         <td>${venta.id}</td>
                         <td>${formatearFecha(venta.fecha)}</td>
                         <td>Bs ${Number(venta.total).toFixed(2)}</td>
                         <td>${venta.usuarioId ?? "-"}</td>
                     `;
-                    tablaMovimientos.appendChild(fila);
+                        tablaMovimientos.appendChild(fila);
+                    });
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        async function abrirCaja() {
+            const monto = parseFloat(document.getElementById("montoInicial").value);
+
+            if (isNaN(monto) || monto < 0) {
+                alert("Ingrese un monto inicial válido.");
+                return;
+            }
+
+            try {
+                const respuesta = await fetch("/cajas/abrir?montoInicial=" + monto, {
+                    method: "POST",
+                    credentials: "same-origin"
                 });
+
+                if (!respuesta.ok) {
+                    document.getElementById("mensaje").textContent = await respuesta.text();
+                    return;
+                }
+
+                const caja = await respuesta.json();
+
+                if (caja && caja.id) {
+                    document.getElementById("mensaje").textContent = "Caja abierta correctamente.";
+                    document.getElementById("montoInicial").value = "";
+                    await cargarCaja();
+                    await cargarHistorial();
+                }
+            } catch (error) {
+                console.error(error);
+                document.getElementById("mensaje").textContent = "Error al abrir la caja.";
             }
-        } catch (error) {
-            console.error(error);
-        }
-    }
-
-    async function abrirCaja() {
-        const monto = parseFloat(document.getElementById("montoInicial").value);
-
-        if (isNaN(monto) || monto < 0) {
-            alert("Ingrese un monto inicial válido.");
-            return;
         }
 
-        try {
-            const respuesta = await fetch("/cajas/abrir?montoInicial=" + monto, {
-                method: "POST",
-                credentials: "same-origin"
-            });
+        // Primero muestra el modal, sin cerrar todavía la caja.
+        function cerrarCaja() {
+            const monto = parseFloat(document.getElementById("montoFinal").value);
 
-            if (!respuesta.ok) {
-                document.getElementById("mensaje").textContent = await respuesta.text();
+            if (isNaN(monto) || monto < 0) {
+                alert("Ingrese un monto final válido.");
                 return;
             }
 
-            const caja = await respuesta.json();
+            document.getElementById("modalMontoFinal").textContent =
+                monto.toFixed(2);
 
-            if (caja && caja.id) {
-                document.getElementById("mensaje").textContent = "Caja abierta correctamente.";
-                document.getElementById("montoInicial").value = "";
-                await cargarCaja();
-                await cargarHistorial();
-            }
-        } catch (error) {
-            console.error(error);
-            document.getElementById("mensaje").textContent = "Error al abrir la caja.";
-        }
-    }
+            const modal = new bootstrap.Modal(
+                document.getElementById("modalConfirmarCierre")
+            );
 
-    async function cerrarCaja() {
-        const monto = parseFloat(document.getElementById("montoFinal").value);
-
-        if (isNaN(monto) || monto < 0) {
-            alert("Ingrese un monto final válido.");
-            return;
+            modal.show();
         }
 
-        if (!confirm("¿Está seguro de cerrar la caja?")) return;
+        // Solo se ejecuta cuando el usuario confirma en el modal.
+        async function confirmarCierreCaja() {
+            const boton = document.getElementById("btnConfirmarCierre");
+            const monto = parseFloat(document.getElementById("montoFinal").value);
 
-        try {
-            const respuesta = await fetch("/cajas/cerrar?montoFinal=" + monto, {
-                method: "POST",
-                credentials: "same-origin"
-            });
-
-            if (!respuesta.ok) {
-                document.getElementById("mensaje").textContent = await respuesta.text();
+            if (isNaN(monto) || monto < 0) {
                 return;
             }
 
-            const caja = await respuesta.json();
+            boton.disabled = true;
+            boton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Cerrando...';
 
-            if (caja && caja.id) {
-                document.getElementById("mensaje").textContent =
-                    "Caja cerrada correctamente. Diferencia: Bs " +
-                    Number(caja.diferencia).toFixed(2);
+            try {
+                const respuesta = await fetch("/cajas/cerrar?montoFinal=" + monto, {
+                    method: "POST",
+                    credentials: "same-origin"
+                });
 
-                document.getElementById("montoFinal").value = "";
-                await cargarCaja();
-                await cargarHistorial();
+                if (!respuesta.ok) {
+                    document.getElementById("mensaje").textContent = await respuesta.text();
+                    return;
+                }
+
+                const caja = await respuesta.json();
+
+                if (caja && caja.id) {
+                    const modalElemento = document.getElementById("modalConfirmarCierre");
+                    const modal = bootstrap.Modal.getInstance(modalElemento);
+                    modal.hide();
+
+                    document.getElementById("mensaje").textContent =
+                        "Caja cerrada correctamente. Diferencia: Bs " +
+                        Number(caja.diferencia).toFixed(2);
+
+                    document.getElementById("montoFinal").value = "";
+                    await cargarCaja();
+                    await cargarHistorial();
+                }
+            } catch (error) {
+                console.error(error);
+                document.getElementById("mensaje").textContent = "Error al cerrar la caja.";
+            } finally {
+                boton.disabled = false;
+                boton.innerHTML = '<i class="bi bi-lock me-1"></i> Confirmar cierre';
             }
-        } catch (error) {
-            console.error(error);
-            document.getElementById("mensaje").textContent = "Error al cerrar la caja.";
         }
-    }
 
-    async function cargarHistorial() {
-        try {
-            const respuesta = await fetch("/cajas", {
-                credentials: "same-origin"
-            });
+        async function cargarHistorial() {
+            try {
+                const respuesta = await fetch("/cajas", {
+                    credentials: "same-origin"
+                });
 
-            if (!respuesta.ok) return;
+                if (!respuesta.ok) return;
 
-            const cajas = await respuesta.json();
-            const tabla = document.getElementById("historial");
-            tabla.innerHTML = "";
+                const cajas = await respuesta.json();
+                const tabla = document.getElementById("historial");
+                tabla.innerHTML = "";
 
-            cajas.forEach(caja => {
-                const fila = document.createElement("tr");
+                cajas.forEach(caja => {
+                    const fila = document.createElement("tr");
 
-                const montoContado = !caja.abierta && caja.montoFinal != null
-                    ? "Bs " + Number(caja.montoFinal).toFixed(2)
-                    : "-";
+                    const montoContado = !caja.abierta && caja.montoFinal != null
+                        ? "Bs " + Number(caja.montoFinal).toFixed(2)
+                        : "-";
 
-                const diferencia = !caja.abierta && caja.diferencia != null
-                    ? "Bs " + Number(caja.diferencia).toFixed(2)
-                    : "-";
+                    const diferencia = !caja.abierta && caja.diferencia != null
+                        ? "Bs " + Number(caja.diferencia).toFixed(2)
+                        : "-";
 
-                fila.innerHTML = `
+                    fila.innerHTML = `
                     <td>${caja.id}</td>
                     <td>${formatearFecha(caja.fechaApertura)}</td>
                     <td>Bs ${Number(caja.montoInicial).toFixed(2)}</td>
@@ -397,25 +534,26 @@
                     </td>
                 `;
 
-                tabla.appendChild(fila);
-            });
-        } catch (error) {
-            console.error(error);
+                    tabla.appendChild(fila);
+                });
+            } catch (error) {
+                console.error(error);
+            }
         }
-    }
 
-    function formatearFecha(fecha) {
-        if (!fecha) return "-";
-        return new Date(fecha).toLocaleString();
-    }
+        function formatearFecha(fecha) {
+            if (!fecha) return "-";
+            return new Date(fecha).toLocaleString();
+        }
 
-    function volver() {
-        window.location.href = "/panel-admin.html";
-    }
+        function volver() {
+            window.location.href = "/panel-admin.html";
+        }
 
-    cargarCaja();
-    cargarHistorial();
-</script>
+        cargarCaja();
+        cargarHistorial();
+    </script>
 
 </body>
+
 </html>

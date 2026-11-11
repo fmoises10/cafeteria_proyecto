@@ -77,20 +77,20 @@ public class CajaController {
         }
 
         @GetMapping("/actual")
-        public Caja cajaActual() {
+        public ResponseEntity<?> cajaActual() {
 
                 Caja caja = cajaRepository
                                 .findFirstByAbiertaTrue()
                                 .orElse(null);
 
                 if (caja == null) {
-                        return null;
+                        return ResponseEntity.ok(Map.of("abierta", false));
                 }
 
                 caja.setEfectivoEsperado(calcularEfectivoEsperado(caja));
                 completarNombres(caja);
 
-                return caja;
+                return ResponseEntity.ok(caja);
         }
 
         @GetMapping("/actual/resumen")
