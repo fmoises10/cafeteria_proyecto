@@ -2,289 +2,688 @@
 <html lang="es">
 
 <head>
-
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reportes - Sistema de Cafetería</title>
 
-    <title>Reportes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
+    <style>
+        body {
+            background: #f4f6f9;
+        }
+
+        .navbar {
+            background: #172554;
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+        }
+
+        .table thead th {
+            background: #eef2ff;
+            white-space: nowrap;
+        }
+
+        .seccion {
+            margin-top: 30px;
+        }
+
+        .filtros {
+            border-radius: 12px;
+            border: none;
+        }
+
+        .rol-usuario {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #475569;
+            background: #e2e8f0;
+            padding: 3px 7px;
+            border-radius: 5px;
+            margin-left: 5px;
+        }
+    </style>
 </head>
 
 <body>
 
-    <h1>Reportes del Sistema</h1>
+    <nav class="navbar navbar-dark px-4 py-3">
+        <span class="navbar-brand fw-bold">
+            Sistema de Cafetería | Reportes
+        </span>
+    </nav>
 
-    <hr>
+    <div class="container py-4">
 
-    <h2>Resumen de ventas</h2>
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <div>
+                <h3 class="fw-bold mb-1">Reportes del Sistema</h3>
+                <p class="text-muted mb-0">
+                    Resumen de ventas, cajas y consumos
+                </p>
+            </div>
 
-    <p>
-        Cantidad de ventas:
-        <strong id="cantidadVentas">0</strong>
-    </p>
+            <button class="btn btn-outline-primary" onclick="volver()">
+                Volver al panel
+            </button>
+        </div>
 
-    <p>
-        Total vendido:
-        <strong>
-            Bs <span id="totalVentas">0.00</span>
-        </strong>
-    </p>
+        <!-- FILTROS -->
 
-    <hr>
+        <div class="card shadow-sm p-3 filtros mb-4">
+            <h6 class="fw-bold mb-3">Filtrar reportes por período</h6>
 
-    <h2>Ventas por método de pago</h2>
+            <div class="row g-3 align-items-end">
 
-    <table border="1">
+                <div class="col-md-4">
+                    <label for="periodo" class="form-label">Período</label>
+                    <select id="periodo" class="form-select" onchange="cambiarPeriodo()">
+                        <option value="todos">Todos los registros</option>
+                        <option value="hoy">Hoy</option>
+                        <option value="ayer">Ayer</option>
+                        <option value="semana">Esta semana</option>
+                        <option value="mes">Este mes</option>
+                        <option value="personalizado">Rango personalizado</option>
+                    </select>
+                </div>
 
-        <thead>
+                <div class="col-md-3" id="contenedorDesde" style="display:none;">
+                    <label for="fechaDesde" class="form-label">Desde</label>
+                    <input type="date" id="fechaDesde" class="form-control" onchange="aplicarFiltro()">
+                </div>
 
-            <tr>
-                <th>Método de pago</th>
-                <th>Total</th>
-            </tr>
+                <div class="col-md-3" id="contenedorHasta" style="display:none;">
+                    <label for="fechaHasta" class="form-label">Hasta</label>
+                    <input type="date" id="fechaHasta" class="form-control" onchange="aplicarFiltro()">
+                </div>
 
-        </thead>
+                <div class="col-md-2">
+                    <button class="btn btn-outline-secondary w-100" onclick="restablecerFiltro()">
+                        Restablecer
+                    </button>
+                </div>
 
-        <tbody>
+            </div>
 
-            <tr>
-                <td>Efectivo</td>
-                <td>
-                    Bs <span id="efectivo">0.00</span>
-                </td>
-            </tr>
+            <small class="text-muted mt-3" id="textoPeriodo">
+                Mostrando todos los registros.
+            </small>
+        </div>
 
-            <tr>
-                <td>QR</td>
-                <td>
-                    Bs <span id="qr">0.00</span>
-                </td>
-            </tr>
+        <!-- VENTAS -->
 
-            <tr>
-                <td>Tarjeta</td>
-                <td>
-                    Bs <span id="tarjeta">0.00</span>
-                </td>
-            </tr>
+        <section class="seccion">
+            <h5 class="fw-bold mb-3">Resumen de ventas</h5>
 
-        </tbody>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="card shadow-sm p-3">
+                        <div class="text-muted">Cantidad de ventas</div>
+                        <h3 id="cantidadVentas">0</h3>
+                    </div>
+                </div>
 
-    </table>
+                <div class="col-md-4">
+                    <div class="card shadow-sm p-3">
+                        <div class="text-muted">Total vendido</div>
+                        <h3>Bs <span id="totalVentas">0.00</span></h3>
+                    </div>
+                </div>
 
-    <hr>
+                <div class="col-md-4">
+                    <div class="card shadow-sm p-3">
+                        <div class="text-muted">Ventas en efectivo</div>
+                        <h3>Bs <span id="efectivo">0.00</span></h3>
+                    </div>
+                </div>
+            </div>
 
-    <h2>Detalle de ventas</h2>
+            <div class="card shadow-sm p-3 mt-3">
+                <h6 class="fw-bold">Ventas por método de pago</h6>
 
-    <table border="1">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Método de pago</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Efectivo</td>
+                                <td>Bs <span id="efectivoTabla">0.00</span></td>
+                            </tr>
+                            <tr>
+                                <td>QR</td>
+                                <td>Bs <span id="qr">0.00</span></td>
+                            </tr>
+                            <tr>
+                                <td>Tarjeta</td>
+                                <td>Bs <span id="tarjeta">0.00</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-        <thead>
+            <div class="card shadow-sm p-3 mt-3">
+                <h6 class="fw-bold">Detalle de ventas</h6>
 
-            <tr>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Fecha</th>
+                                <th>Total</th>
+                                <th>Método de pago</th>
+                                <th>Usuario responsable</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listaVentas"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
 
-                <th>ID</th>
-                <th>Fecha</th>
-                <th>Total</th>
-                <th>Método de pago</th>
+        <!-- CAJAS -->
 
-            </tr>
+        <section class="seccion">
+            <h5 class="fw-bold mb-3">Historial de cajas</h5>
 
-        </thead>
+            <div class="card shadow-sm p-3">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Apertura</th>
+                                <th>Cierre</th>
+                                <th>Monto inicial</th>
+                                <th>Efectivo esperado</th>
+                                <th>Monto contado</th>
+                                <th>Diferencia</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listaCajas"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
 
-        <tbody id="listaVentas"></tbody>
+        <!-- CONSUMOS -->
 
-    </table>
+        <section class="seccion">
+            <h5 class="fw-bold mb-3">Reporte de consumos</h5>
 
-    <hr>
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <div class="card shadow-sm p-3">
+                        <div class="text-muted">Registros de consumo</div>
+                        <h3 id="cantidadConsumos">0</h3>
+                    </div>
+                </div>
+            </div>
 
-    <h2>Historial de cajas</h2>
+            <div class="card shadow-sm p-3 mb-3">
+                <h6 class="fw-bold">Cantidad consumida por insumo</h6>
 
-    <table border="1">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Insumo</th>
+                                <th>Cantidad total</th>
+                                <th>Unidad</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listaResumenConsumos"></tbody>
+                    </table>
+                </div>
+            </div>
 
-        <thead>
+            <div class="card shadow-sm p-3">
+                <h6 class="fw-bold">Detalle de consumos</h6>
 
-            <tr>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Fecha</th>
+                                <th>Insumo</th>
+                                <th>Cantidad</th>
+                                <th>Contenedor</th>
+                                <th>Usuario</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listaConsumos"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
 
-                <th>ID</th>
-                <th>Fecha apertura</th>
-                <th>Fecha cierre</th>
-                <th>Monto inicial</th>
-                <th>Efectivo esperado</th>
-                <th>Monto contado</th>
-                <th>Diferencia</th>
-                <th>Estado</th>
-
-            </tr>
-
-        </thead>
-
-        <tbody id="listaCajas"></tbody>
-
-    </table>
-
-    <br>
-
-    <button onclick="volver()">
-        Volver al panel
-    </button>
+    </div>
 
     <script>
 
-        async function cargarReporteVentas() {
+        let ventasOriginales = [];
+        let cajasOriginales = [];
+        let consumosOriginales = [];
 
-            const respuesta =
-                await fetch("/reportes/ventas");
-
-            const reporte =
-                await respuesta.json();
-
-            document.getElementById(
-                "cantidadVentas"
-            ).textContent =
-                reporte.cantidadVentas;
-
-            document.getElementById(
-                "totalVentas"
-            ).textContent =
-                reporte.totalVentas.toFixed(2);
-
-            document.getElementById(
-                "efectivo"
-            ).textContent =
-                reporte.efectivo.toFixed(2);
-
-            document.getElementById(
-                "qr"
-            ).textContent =
-                reporte.qr.toFixed(2);
-
-            document.getElementById(
-                "tarjeta"
-            ).textContent =
-                reporte.tarjeta.toFixed(2);
-
-            const lista =
-                document.getElementById(
-                    "listaVentas"
-                );
-
-            lista.innerHTML = "";
-
-            reporte.ventas.forEach(venta => {
-
-                const fila =
-                    document.createElement("tr");
-
-                fila.innerHTML = `
-
-                    <td>
-                        ${venta.id}
-                    </td>
-
-                    <td>
-                        ${formatearFecha(venta.fecha)}
-                    </td>
-
-                    <td>
-                        Bs ${venta.total.toFixed(2)}
-                    </td>
-
-                    <td>
-                        ${venta.metodoPago || "-"}
-                    </td>
-
-                `;
-
-                lista.appendChild(fila);
-
-            });
+        function numero(valor) {
+            return Number(valor || 0).toFixed(2);
         }
 
-        async function cargarReporteCajas() {
+        function formatearFecha(fecha) {
+            if (!fecha) return "-";
+            return new Date(fecha).toLocaleString();
+        }
 
-            const respuesta =
-                await fetch("/reportes/cajas");
+        function crearCelda(valor) {
+            const td = document.createElement("td");
+            td.textContent = valor ?? "-";
+            return td;
+        }
 
-            const cajas =
-                await respuesta.json();
+        function crearCeldaUsuario(venta) {
 
-            const lista =
-                document.getElementById(
-                    "listaCajas"
+            const td = document.createElement("td");
+
+            const nombre = venta.usuario || venta.vendedor || "No identificado";
+            const rol = venta.rol || "";
+
+            td.textContent = nombre;
+
+            if (rol && rol !== "-") {
+                const etiqueta = document.createElement("span");
+                etiqueta.className = "rol-usuario";
+                etiqueta.textContent = rol;
+
+                td.appendChild(etiqueta);
+            }
+
+            return td;
+        }
+
+        function fechaLocal(fecha) {
+            const anio = fecha.getFullYear();
+            const mes = String(fecha.getMonth() + 1).padStart(2, "0");
+            const dia = String(fecha.getDate()).padStart(2, "0");
+
+            return `${anio}-${mes}-${dia}`;
+        }
+
+        function obtenerRango() {
+
+            const periodo = document.getElementById("periodo").value;
+
+            const hoy = new Date();
+            const fechaHoy = fechaLocal(hoy);
+
+            let desde = null;
+            let hasta = null;
+
+            if (periodo === "hoy") {
+                desde = fechaHoy;
+                hasta = fechaHoy;
+            }
+
+            if (periodo === "ayer") {
+                const ayer = new Date();
+                ayer.setDate(ayer.getDate() - 1);
+
+                desde = fechaLocal(ayer);
+                hasta = fechaLocal(ayer);
+            }
+
+            if (periodo === "semana") {
+                const inicio = new Date();
+                const dia = inicio.getDay();
+
+                const diferencia = dia === 0 ? 6 : dia - 1;
+
+                inicio.setDate(inicio.getDate() - diferencia);
+
+                desde = fechaLocal(inicio);
+                hasta = fechaHoy;
+            }
+
+            if (periodo === "mes") {
+                const inicio = new Date(
+                    hoy.getFullYear(),
+                    hoy.getMonth(),
+                    1
                 );
 
+                desde = fechaLocal(inicio);
+                hasta = fechaHoy;
+            }
+
+            if (periodo === "personalizado") {
+                desde = document.getElementById("fechaDesde").value || null;
+                hasta = document.getElementById("fechaHasta").value || null;
+            }
+
+            return { desde, hasta, periodo };
+        }
+
+        function estaDentroDelRango(fecha, rango) {
+
+            if (!rango.desde && !rango.hasta) {
+                return true;
+            }
+
+            if (!fecha) {
+                return false;
+            }
+
+            const dia = String(fecha).substring(0, 10);
+
+            if (rango.desde && dia < rango.desde) {
+                return false;
+            }
+
+            if (rango.hasta && dia > rango.hasta) {
+                return false;
+            }
+
+            return true;
+        }
+
+        function cambiarPeriodo() {
+
+            const personalizado =
+                document.getElementById("periodo").value === "personalizado";
+
+            document.getElementById("contenedorDesde").style.display =
+                personalizado ? "block" : "none";
+
+            document.getElementById("contenedorHasta").style.display =
+                personalizado ? "block" : "none";
+
+            aplicarFiltro();
+        }
+
+        function restablecerFiltro() {
+
+            document.getElementById("periodo").value = "todos";
+            document.getElementById("fechaDesde").value = "";
+            document.getElementById("fechaHasta").value = "";
+
+            cambiarPeriodo();
+        }
+
+        function aplicarFiltro() {
+
+            const rango = obtenerRango();
+
+            const ventas = ventasOriginales.filter(venta =>
+                estaDentroDelRango(venta.fecha, rango)
+            );
+
+            const cajas = cajasOriginales.filter(caja =>
+                estaDentroDelRango(caja.fechaApertura, rango)
+            );
+
+            const consumos = consumosOriginales.filter(consumo =>
+                estaDentroDelRango(consumo.fecha, rango)
+            );
+
+            actualizarTextoPeriodo(rango);
+
+            mostrarVentas(ventas);
+            mostrarCajas(cajas);
+            mostrarConsumos(consumos);
+        }
+
+        function actualizarTextoPeriodo(rango) {
+
+            const texto = document.getElementById("textoPeriodo");
+
+            if (rango.periodo === "todos") {
+                texto.textContent = "Mostrando todos los registros.";
+                return;
+            }
+
+            if (rango.periodo === "personalizado") {
+
+                if (!rango.desde && !rango.hasta) {
+                    texto.textContent =
+                        "Selecciona al menos una fecha para aplicar el filtro.";
+                    return;
+                }
+
+                texto.textContent =
+                    `Período seleccionado: ${rango.desde || "Sin límite"} hasta ${rango.hasta || "Sin límite"}.`;
+
+                return;
+            }
+
+            texto.textContent =
+                `Mostrando registros del período: ${document.getElementById("periodo").selectedOptions[0].text}.`;
+        }
+
+        // VENTAS
+
+        function mostrarVentas(ventas) {
+
+            const totalVentas = ventas.reduce(
+                (suma, venta) => suma + Number(venta.total || 0),
+                0
+            );
+
+            const efectivo = ventas
+                .filter(v => v.metodoPago === "EFECTIVO")
+                .reduce((suma, v) => suma + Number(v.total || 0), 0);
+
+            const qr = ventas
+                .filter(v => v.metodoPago === "QR")
+                .reduce((suma, v) => suma + Number(v.total || 0), 0);
+
+            const tarjeta = ventas
+                .filter(v => v.metodoPago === "TARJETA")
+                .reduce((suma, v) => suma + Number(v.total || 0), 0);
+
+            document.getElementById("cantidadVentas").textContent =
+                ventas.length;
+
+            document.getElementById("totalVentas").textContent =
+                numero(totalVentas);
+
+            document.getElementById("efectivo").textContent =
+                numero(efectivo);
+
+            document.getElementById("efectivoTabla").textContent =
+                numero(efectivo);
+
+            document.getElementById("qr").textContent =
+                numero(qr);
+
+            document.getElementById("tarjeta").textContent =
+                numero(tarjeta);
+
+            const lista = document.getElementById("listaVentas");
+            lista.innerHTML = "";
+
+            ventas.forEach(venta => {
+
+                const fila = document.createElement("tr");
+
+                fila.appendChild(crearCelda(venta.id));
+                fila.appendChild(crearCelda(formatearFecha(venta.fecha)));
+                fila.appendChild(crearCelda("Bs " + numero(venta.total)));
+                fila.appendChild(crearCelda(venta.metodoPago || "-"));
+                fila.appendChild(crearCeldaUsuario(venta));
+
+                lista.appendChild(fila);
+            });
+
+            if (ventas.length === 0) {
+                lista.innerHTML =
+                    '<tr><td colspan="5" class="text-center text-muted">No hay ventas en este período</td></tr>';
+            }
+        }
+
+        // CAJAS
+
+        function mostrarCajas(cajas) {
+
+            const lista = document.getElementById("listaCajas");
             lista.innerHTML = "";
 
             cajas.forEach(caja => {
 
-                const fila =
-                    document.createElement("tr");
+                const fila = document.createElement("tr");
 
-                fila.innerHTML = `
+                fila.appendChild(crearCelda(caja.id));
+                fila.appendChild(crearCelda(formatearFecha(caja.fechaApertura)));
+                fila.appendChild(crearCelda(formatearFecha(caja.fechaCierre)));
+                fila.appendChild(crearCelda("Bs " + numero(caja.montoInicial)));
+                fila.appendChild(crearCelda("Bs " + numero(caja.efectivoEsperado)));
 
-                    <td>
-                        ${caja.id}
-                    </td>
+                fila.appendChild(crearCelda(
+                    caja.abierta ? "-" : "Bs " + numero(caja.montoFinal)
+                ));
 
-                    <td>
-                        ${formatearFecha(
-                            caja.fechaApertura
-                        )}
-                    </td>
+                fila.appendChild(crearCelda(
+                    caja.abierta ? "-" : "Bs " + numero(caja.diferencia)
+                ));
 
-                    <td>
-                        ${formatearFecha(
-                            caja.fechaCierre
-                        )}
-                    </td>
-
-                    <td>
-                        Bs ${caja.montoInicial.toFixed(2)}
-                    </td>
-
-                    <td>
-                        Bs ${caja.efectivoEsperado.toFixed(2)}
-                    </td>
-
-                    <td>
-                        Bs ${caja.montoFinal.toFixed(2)}
-                    </td>
-
-                    <td>
-                        Bs ${caja.diferencia.toFixed(2)}
-                    </td>
-
-                    <td>
-                        ${caja.abierta
-                            ? "ABIERTA"
-                            : "CERRADA"}
-                    </td>
-
-                `;
+                fila.appendChild(crearCelda(
+                    caja.abierta ? "ABIERTA" : "CERRADA"
+                ));
 
                 lista.appendChild(fila);
-
             });
+
+            if (cajas.length === 0) {
+                lista.innerHTML =
+                    '<tr><td colspan="8" class="text-center text-muted">No hay cajas en este período</td></tr>';
+            }
         }
 
-        function formatearFecha(fecha) {
+        // CONSUMOS
 
-            if (!fecha) {
-                return "-";
+        function mostrarConsumos(consumos) {
+
+            document.getElementById("cantidadConsumos").textContent =
+                consumos.length;
+
+            const agrupados = {};
+
+            consumos.forEach(consumo => {
+
+                const nombre = consumo.insumo || "Insumo no encontrado";
+                const unidad = consumo.unidad || "";
+                const clave = nombre + "|" + unidad;
+
+                if (!agrupados[clave]) {
+                    agrupados[clave] = {
+                        insumo: nombre,
+                        unidad: unidad,
+                        cantidadTotal: 0
+                    };
+                }
+
+                agrupados[clave].cantidadTotal +=
+                    Number(consumo.cantidad || 0);
+            });
+
+            const resumen = document.getElementById("listaResumenConsumos");
+            resumen.innerHTML = "";
+
+            Object.values(agrupados).forEach(item => {
+
+                const fila = document.createElement("tr");
+
+                fila.appendChild(crearCelda(item.insumo));
+                fila.appendChild(crearCelda(numero(item.cantidadTotal)));
+                fila.appendChild(crearCelda(item.unidad));
+
+                resumen.appendChild(fila);
+            });
+
+            if (Object.keys(agrupados).length === 0) {
+                resumen.innerHTML =
+                    '<tr><td colspan="3" class="text-center text-muted">No hay consumos en este período</td></tr>';
             }
 
-            return new Date(fecha)
-                .toLocaleString();
+            const lista = document.getElementById("listaConsumos");
+            lista.innerHTML = "";
+
+            consumos.forEach(consumo => {
+
+                const fila = document.createElement("tr");
+
+                fila.appendChild(crearCelda(consumo.id));
+                fila.appendChild(crearCelda(formatearFecha(consumo.fecha)));
+                fila.appendChild(crearCelda(consumo.insumo));
+
+                fila.appendChild(crearCelda(
+                    numero(consumo.cantidad) + " " + (consumo.unidad || "")
+                ));
+
+                fila.appendChild(crearCelda(consumo.contenedor));
+                fila.appendChild(crearCelda(consumo.usuario));
+
+                lista.appendChild(fila);
+            });
+
+            if (consumos.length === 0) {
+                lista.innerHTML =
+                    '<tr><td colspan="6" class="text-center text-muted">No hay consumos en este período</td></tr>';
+            }
+        }
+
+        // CARGA DE DATOS
+
+        async function cargarReportes() {
+
+            try {
+
+                const [respuestaVentas, respuestaCajas, respuestaConsumos] =
+                    await Promise.all([
+                        fetch("/reportes/ventas"),
+                        fetch("/reportes/cajas"),
+                        fetch("/reportes/consumos")
+                    ]);
+
+                if (!respuestaVentas.ok ||
+                    !respuestaCajas.ok ||
+                    !respuestaConsumos.ok) {
+
+                    throw new Error("No se pudieron cargar los reportes");
+                }
+
+                const reporteVentas = await respuestaVentas.json();
+                const reporteCajas = await respuestaCajas.json();
+                const reporteConsumos = await respuestaConsumos.json();
+
+                ventasOriginales = reporteVentas.ventas || [];
+                cajasOriginales = reporteCajas || [];
+                consumosOriginales = reporteConsumos.consumos || [];
+
+                aplicarFiltro();
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Ocurrió un error al cargar los reportes. Revisa la consola.");
+            }
         }
 
         function volver() {
-
-            window.location.href =
-                "/panel-admin.html";
+            window.location.href = "/panel-admin.html";
         }
 
-        cargarReporteVentas();
-
-        cargarReporteCajas();
+        cargarReportes();
 
     </script>
 
